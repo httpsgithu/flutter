@@ -11,22 +11,20 @@ void main() {
 }
 
 class FlutterView extends StatelessWidget {
-  const FlutterView({Key? key}) : super(key: key);
+  const FlutterView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter View',
-      theme: ThemeData(
-        primarySwatch: Colors.grey,
-      ),
+      theme: ThemeData(primarySwatch: Colors.grey),
       home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -36,8 +34,10 @@ class _MyHomePageState extends State<MyHomePage> {
   static const String _channel = 'increment';
   static const String _pong = 'pong';
   static const String _emptyMessage = '';
-  static const BasicMessageChannel<String?> platform =
-      BasicMessageChannel<String?>(_channel, StringCodec());
+  static const BasicMessageChannel<String?> platform = BasicMessageChannel<String?>(
+    _channel,
+    StringCodec(),
+  );
 
   int _counter = 0;
 
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             child: Center(
               child: Text(
-                'Platform button tapped $_counter time${ _counter == 1 ? '' : 's' }.',
+                'Platform button tapped $_counter time${_counter == 1 ? '' : 's'}.',
                 style: const TextStyle(fontSize: 17.0),
               ),
             ),

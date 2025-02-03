@@ -5,7 +5,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -83,7 +82,7 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(
-        (context ?? SecurityContext())..setTrustedCertificatesBytes(certificate.codeUnits),
+      (context ?? SecurityContext())..setTrustedCertificatesBytes(certificate.codeUnits),
     );
   }
 }
@@ -91,12 +90,12 @@ class MyHttpOverrides extends HttpOverrides {
 Future<void> main() async {
   HttpOverrides.global = MyHttpOverrides();
 
-  final SecurityContext serverContext = SecurityContext()
-    ..useCertificateChainBytes(certificate.codeUnits)
-    ..usePrivateKeyBytes(privateKey.codeUnits);
+  final SecurityContext serverContext =
+      SecurityContext()
+        ..useCertificateChainBytes(certificate.codeUnits)
+        ..usePrivateKeyBytes(privateKey.codeUnits);
 
-  final HttpServer httpServer =
-      await HttpServer.bindSecure('localhost', 0, serverContext);
+  final HttpServer httpServer = await HttpServer.bindSecure('localhost', 0, serverContext);
   final int port = httpServer.port;
   debugPrint('Listening on port $port.');
 
@@ -120,11 +119,11 @@ Future<void> main() async {
   runApp(MyApp(port));
 }
 
-const int IMAGES = 50;
+const int images = 50;
 
 @immutable
 class MyApp extends StatelessWidget {
-  const MyApp(this.port, {Key? key}) : super(key: key);
+  const MyApp(this.port, {super.key});
 
   final int port;
 
@@ -132,16 +131,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: MyHomePage(title: 'Flutter Demo Home Page', port: port),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title, required this.port}) : super(key: key);
+  const MyHomePage({super.key, required this.title, required this.port});
   final String title;
   final int port;
 
@@ -160,37 +157,27 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   Widget createImage(final int index, final Completer<bool> completer) {
     return Image.network(
-        'https://localhost:${widget.port}/${_counter * IMAGES + index}',
-        frameBuilder: (
-          BuildContext context,
-          Widget child,
-          int? frame,
-          bool wasSynchronouslyLoaded,
-        ) {
-          if (frame == 0 && !completer.isCompleted) {
-            completer.complete(true);
-          }
-          return child;
-        },
+      'https://localhost:${widget.port}/${_counter * images + index}',
+      frameBuilder: (BuildContext context, Widget child, int? frame, bool wasSynchronouslyLoaded) {
+        if (frame == 0 && !completer.isCompleted) {
+          completer.complete(true);
+        }
+        return child;
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final List<AnimationController> controllers = <AnimationController>[
-      for (int i = 0; i < IMAGES; i++)
-        AnimationController(
-          duration: const Duration(milliseconds: 3600),
-          vsync: this,
-        )..repeat(),
+      for (int i = 0; i < images; i++)
+        AnimationController(duration: const Duration(milliseconds: 3600), vsync: this)..repeat(),
     ];
     final List<Completer<bool>> completers = <Completer<bool>>[
-      for (int i = 0; i < IMAGES; i++)
-        Completer<bool>(),
+      for (int i = 0; i < images; i++) Completer<bool>(),
     ];
-    final List<Future<bool>> futures = completers.map(
-      (Completer<bool> completer) => completer.future,
-    ).toList();
+    final List<Future<bool>> futures =
+        completers.map((Completer<bool> completer) => completer.future).toList();
     final DateTime started = DateTime.now();
     Future.wait(futures).then((_) {
       debugPrint(
@@ -198,21 +185,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       );
     });
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Row(children: createImageList(IMAGES, completers, controllers)),
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            Row(children: createImageList(images, completers, controllers)),
+            const Text('You have pushed the button this many times:'),
+            Text('$_counter', style: Theme.of(context).textTheme.headlineMedium),
           ],
         ),
       ),
@@ -231,14 +211,16 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   ) {
     final List<Widget> list = <Widget>[];
     for (int i = 0; i < count; i++) {
-      list.add(Flexible(
-        fit: FlexFit.tight,
-        flex: i + 1,
-        child: RotationTransition(
-          turns: controllers[i],
-          child: createImage(i + 1, completers[i]),
+      list.add(
+        Flexible(
+          fit: FlexFit.tight,
+          flex: i + 1,
+          child: RotationTransition(
+            turns: controllers[i],
+            child: createImage(i + 1, completers[i]),
+          ),
         ),
-      ));
+      );
     }
     return list;
   }

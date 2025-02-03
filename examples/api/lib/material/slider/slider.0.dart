@@ -2,51 +2,80 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for Slider
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [Slider].
+/// set to false.
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const SliderExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class SliderExampleApp extends StatelessWidget {
+  const SliderExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: const MyStatefulWidget(),
-      ),
-    );
+    return const MaterialApp(home: SliderExample());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class SliderExample extends StatefulWidget {
+  const SliderExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<SliderExample> createState() => _SliderExampleState();
 }
 
-class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+class _SliderExampleState extends State<SliderExample> {
   double _currentSliderValue = 20;
+  double _currentDiscreteSliderValue = 60;
+  bool year2023 = true;
 
   @override
   Widget build(BuildContext context) {
-    return Slider(
-      value: _currentSliderValue,
-      max: 100,
-      divisions: 5,
-      label: _currentSliderValue.round().toString(),
-      onChanged: (double value) {
-        setState(() {
-          _currentSliderValue = value;
-        });
-      },
+    return Scaffold(
+      appBar: AppBar(title: const Text('Slider')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 16,
+          children: <Widget>[
+            Slider(
+              year2023: year2023,
+              value: _currentSliderValue,
+              max: 100,
+              onChanged: (double value) {
+                setState(() {
+                  _currentSliderValue = value;
+                });
+              },
+            ),
+            Slider(
+              year2023: year2023,
+              value: _currentDiscreteSliderValue,
+              max: 100,
+              divisions: 5,
+              label: _currentDiscreteSliderValue.round().toString(),
+              onChanged: (double value) {
+                setState(() {
+                  _currentDiscreteSliderValue = value;
+                });
+              },
+            ),
+            SwitchListTile(
+              value: year2023,
+              title:
+                  year2023
+                      ? const Text('Switch to latest M3 style')
+                      : const Text('Switch to year2023 M3 style'),
+              onChanged: (bool value) {
+                setState(() {
+                  year2023 = !year2023;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

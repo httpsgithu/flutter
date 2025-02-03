@@ -2,11 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'dart:developer';
+///
+/// @docImport 'package:flutter/foundation.dart';
+/// @docImport 'package:flutter/rendering.dart';
+/// @docImport 'package:flutter/widgets.dart';
+library;
+
 import 'dart:ui' as ui show Brightness;
 
 import 'assertions.dart';
 import 'platform.dart';
 import 'print.dart';
+
+export 'dart:ui' show Brightness;
+
+export 'print.dart' show DebugPrintCallback;
 
 /// Returns true if none of the foundation library debug variables have been
 /// changed.
@@ -21,13 +32,17 @@ import 'print.dart';
 ///
 /// See [the foundation library](foundation/foundation-library.html)
 /// for a complete list.
-bool debugAssertAllFoundationVarsUnset(String reason, { DebugPrintCallback debugPrintOverride = debugPrintThrottled }) {
+bool debugAssertAllFoundationVarsUnset(
+  String reason, {
+  DebugPrintCallback debugPrintOverride = debugPrintThrottled,
+}) {
   assert(() {
     if (debugPrint != debugPrintOverride ||
         debugDefaultTargetPlatformOverride != null ||
         debugDoublePrecision != null ||
-        debugBrightnessOverride != null)
+        debugBrightnessOverride != null) {
       throw FlutterError(reason);
+    }
     return true;
   }());
   return true;
@@ -35,6 +50,18 @@ bool debugAssertAllFoundationVarsUnset(String reason, { DebugPrintCallback debug
 
 /// Boolean value indicating whether [debugInstrumentAction] will instrument
 /// actions in debug builds.
+///
+/// The framework does not use [debugInstrumentAction] internally, so this
+/// does not enable any additional instrumentation for the framework itself.
+///
+/// See also:
+///
+///  * [debugProfileBuildsEnabled], which enables additional tracing of builds
+///    in [Widget]s.
+///  * [debugProfileLayoutsEnabled], which enables additional tracing of layout
+///    events in [RenderObject]s.
+///  * [debugProfilePaintsEnabled], which enables additional tracing of paint
+///    events in [RenderObject]s.
 bool debugInstrumentationEnabled = false;
 
 /// Runs the specified [action], timing how long the action takes in debug
@@ -58,7 +85,9 @@ Future<T> debugInstrumentAction<T>(String description, Future<T> Function() acti
     return true;
   }());
   if (instrument) {
-    final Stopwatch stopwatch = Stopwatch()..start();
+    final Stopwatch stopwatch =
+        Stopwatch()..start(); // flutter_ignore: stopwatch (see analyze.dart)
+    // Ignore context: The framework does not use this function internally so it will not cause flakes.
     try {
       return await action();
     } finally {
@@ -69,20 +98,6 @@ Future<T> debugInstrumentAction<T>(String description, Future<T> Function() acti
     return action();
   }
 }
-
-/// Argument passed to [dart:developer.Timeline] events in order to cause those
-/// events to be shown in the developer-centric version of the Observatory
-/// Timeline.
-///
-/// Generally these indicate landmark events such as the build phase or layout.
-///
-/// See also:
-///
-///  * [dart:developer.Timeline.startSync], which typically takes this value as
-///    its `arguments` argument.
-const Map<String, String> timelineArgumentsIndicatingLandmarkEvent = <String, String>{
-  'mode': 'basic',
-};
 
 /// Configure [debugFormatDouble] using [num.toStringAsPrecision].
 ///

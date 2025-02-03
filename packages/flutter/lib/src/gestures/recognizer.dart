@@ -2,23 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'package:flutter/widgets.dart';
+///
+/// @docImport 'drag_details.dart';
+/// @docImport 'monodrag.dart';
+/// @docImport 'multitap.dart';
+/// @docImport 'tap.dart';
+library;
 
 import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:vector_math/vector_math_64.dart';
 
 import 'arena.dart';
 import 'binding.dart';
 import 'constants.dart';
 import 'debug.dart';
 import 'events.dart';
-import 'gesture_settings.dart';
 import 'pointer_router.dart';
 import 'team.dart';
 
-export 'pointer_router.dart' show PointerRouter;
+export 'dart:ui' show Offset, PointerDeviceKind;
+
+export 'package:flutter/foundation.dart' show DiagnosticPropertiesBuilder;
+export 'package:vector_math/vector_math_64.dart' show Matrix4;
+
+export 'arena.dart' show GestureDisposition;
+export 'events.dart' show PointerDownEvent, PointerEvent, PointerPanZoomStartEvent;
+export 'gesture_settings.dart' show DeviceGestureSettings;
+export 'team.dart' show GestureArenaTeam;
 
 /// Generic signature for callbacks passed to
 /// [GestureRecognizer.invokeCallback]. This allows the
@@ -41,6 +54,65 @@ enum DragStartBehavior {
   /// won the arena.
   start,
 }
+
+/// Configuration of multi-finger drag strategy on multi-touch devices.
+///
+/// When dragging with only one finger, there's no difference in behavior
+/// between all the settings.
+///
+/// Used by [DragGestureRecognizer.multitouchDragStrategy].
+enum MultitouchDragStrategy {
+  /// Only the latest active pointer is tracked by the recognizer.
+  ///
+  /// If the tracked pointer is released, the first accepted of the remaining active
+  /// pointers will continue to be tracked.
+  ///
+  /// This is the behavior typically seen on Android.
+  latestPointer,
+
+  /// All active pointers will be tracked, and the result is computed from
+  /// the boundary pointers.
+  ///
+  /// The scrolling offset is determined by the maximum deltas of both directions.
+  ///
+  /// If the user is dragging with 3 pointers at the same time, each having
+  /// \[+10, +20, +33\] pixels of offset, the recognizer will report a delta of 33 pixels.
+  ///
+  /// If the user is dragging with 5 pointers at the same time, each having
+  /// \[+10, +20, +33, -1, -12\] pixels of offset, the recognizer will report a
+  /// delta of (+33) + (-12) = 21 pixels.
+  ///
+  /// The panning [PanGestureRecognizer] offset is the average of all pointers.
+  ///
+  /// If the user is dragging with 3 pointers at the same time, each having
+  /// \[+10, +50, -30\] pixels of offset in one direction (horizontal or vertical),
+  /// the recognizer will report a delta of (10 + 50 -30) / 3 = 10 pixels in this direction.
+  ///
+  /// This is the behavior typically seen on iOS.
+  averageBoundaryPointers,
+
+  /// All active pointers will be tracked together. The scrolling offset
+  /// is the sum of the offsets of all active pointers.
+  ///
+  /// When a [Scrollable] drives scrolling by this drag strategy, the scrolling
+  /// speed will double or triple, depending on how many fingers are dragging
+  /// at the same time.
+  ///
+  /// If the user is dragging with 3 pointers at the same time, each having
+  /// \[+10, +20, +33\] pixels of offset, the recognizer will report a delta
+  /// of 10 + 20 + 33 = 63 pixels.
+  ///
+  /// If the user is dragging with 5 pointers at the same time, each having
+  /// \[+10, +20, +33, -1, -12\] pixels of offset, the recognizer will report
+  /// a delta of 10 + 20 + 33 - 1 - 12 = 50 pixels.
+  sumAllPointers,
+}
+
+/// Signature for [GestureRecognizer.allowedButtonsFilter].
+///
+/// Used to filter the input buttons of incoming pointer events.
+/// The parameter `buttons` comes from [PointerEvent.buttons].
+typedef AllowedButtonsFilter = bool Function(int buttons);
 
 /// The base class that all gesture recognizers inherit from.
 ///
@@ -67,14 +139,19 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// {@endtemplate}
   GestureRecognizer({
     this.debugOwner,
-    @Deprecated(
-      'Migrate to supportedDevices. '
-      'This feature was deprecated after v2.3.0-1.0.pre.',
-    )
-    PointerDeviceKind? kind,
-    Set<PointerDeviceKind>? supportedDevices,
-  }) : assert(kind == null || supportedDevices == null),
-       _supportedDevices = kind == null ? supportedDevices : <PointerDeviceKind>{ kind };
+    this.supportedDevices,
+    this.allowedButtonsFilter = _defaultButtonAcceptBehavior,
+  }) {
+    // TODO(polina-c): stop duplicating code across disposables
+    // https://github.com/flutter/flutter/issues/137435
+    if (kFlutterMemoryAllocationsEnabled) {
+      FlutterMemoryAllocations.instance.dispatchObjectCreated(
+        library: 'package:flutter/gestures.dart',
+        className: '$GestureRecognizer',
+        object: this,
+      );
+    }
+  }
 
   /// The recognizer's owner.
   ///
@@ -90,11 +167,71 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// `supportedDevices` in the constructor, or the currently deprecated `kind`.
   /// These cannot both be set. If both are null, events from all device kinds will be
   /// tracked and recognized.
-  final Set<PointerDeviceKind>? _supportedDevices;
+  Set<PointerDeviceKind>? supportedDevices;
+
+  /// {@template flutter.gestures.multidrag._allowedButtonsFilter}
+  /// Called when interaction starts. This limits the dragging behavior
+  /// for custom clicks (such as scroll click). Its parameter comes
+  /// from [PointerEvent.buttons].
+  ///
+  /// Due to how [kPrimaryButton], [kSecondaryButton], etc., use integers,
+  /// bitwise operations can help filter how buttons are pressed.
+  /// For example, if someone simultaneously presses the primary and secondary
+  /// buttons, the default behavior will return false. The following code
+  /// accepts any button press with primary:
+  /// `(int buttons) => buttons & kPrimaryButton != 0`.
+  ///
+  /// When value is `(int buttons) => false`, allow no interactions.
+  /// When value is `(int buttons) => true`, allow all interactions.
+  ///
+  /// Defaults to all buttons.
+  /// {@endtemplate}
+  final AllowedButtonsFilter allowedButtonsFilter;
+
+  // The default value for [allowedButtonsFilter].
+  // Accept any input.
+  static bool _defaultButtonAcceptBehavior(int buttons) => true;
 
   /// Holds a mapping between pointer IDs and the kind of devices they are
   /// coming from.
   final Map<int, PointerDeviceKind> _pointerToKind = <int, PointerDeviceKind>{};
+
+  /// Registers a new pointer pan/zoom that might be relevant to this gesture
+  /// detector.
+  ///
+  /// A pointer pan/zoom is a stream of events that conveys data covering
+  /// pan, zoom, and rotate data from a multi-finger trackpad gesture.
+  ///
+  /// The owner of this gesture recognizer calls addPointerPanZoom() with the
+  /// PointerPanZoomStartEvent of each pointer that should be considered for
+  /// this gesture.
+  ///
+  /// It's the GestureRecognizer's responsibility to then add itself
+  /// to the global pointer router (see [PointerRouter]) to receive
+  /// subsequent events for this pointer, and to add the pointer to
+  /// the global gesture arena manager (see [GestureArenaManager]) to track
+  /// that pointer.
+  ///
+  /// This method is called for each and all pointers being added. In
+  /// most cases, you want to override [addAllowedPointerPanZoom] instead.
+  void addPointerPanZoom(PointerPanZoomStartEvent event) {
+    _pointerToKind[event.pointer] = event.kind;
+    if (isPointerPanZoomAllowed(event)) {
+      addAllowedPointerPanZoom(event);
+    } else {
+      handleNonAllowedPointerPanZoom(event);
+    }
+  }
+
+  /// Registers a new pointer pan/zoom that's been checked to be allowed by this
+  /// gesture recognizer.
+  ///
+  /// Subclasses of [GestureRecognizer] are supposed to override this method
+  /// instead of [addPointerPanZoom] because [addPointerPanZoom] will be called for each
+  /// pointer being added while [addAllowedPointerPanZoom] is only called for pointers
+  /// that are allowed by this recognizer.
+  @protected
+  void addAllowedPointerPanZoom(PointerPanZoomStartEvent event) {}
 
   /// Registers a new pointer that might be relevant to this gesture
   /// detector.
@@ -128,7 +265,7 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// pointer being added while [addAllowedPointer] is only called for pointers
   /// that are allowed by this recognizer.
   @protected
-  void addAllowedPointer(PointerDownEvent event) { }
+  void addAllowedPointer(PointerDownEvent event) {}
 
   /// Handles a pointer being added that's not allowed by this recognizer.
   ///
@@ -137,14 +274,25 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// See:
   /// - [OneSequenceGestureRecognizer.handleNonAllowedPointer].
   @protected
-  void handleNonAllowedPointer(PointerDownEvent event) { }
+  void handleNonAllowedPointer(PointerDownEvent event) {}
 
   /// Checks whether or not a pointer is allowed to be tracked by this recognizer.
   @protected
   bool isPointerAllowed(PointerDownEvent event) {
-    // Currently, it only checks for device kind. But in the future we could check
-    // for other things e.g. mouse button.
-    return _supportedDevices == null || _supportedDevices!.contains(event.kind);
+    return (supportedDevices == null || supportedDevices!.contains(event.kind)) &&
+        allowedButtonsFilter(event.buttons);
+  }
+
+  /// Handles a pointer pan/zoom being added that's not allowed by this recognizer.
+  ///
+  /// Subclasses can override this method and reject the gesture.
+  @protected
+  void handleNonAllowedPointerPanZoom(PointerPanZoomStartEvent event) {}
+
+  /// Checks whether or not a pointer pan/zoom is allowed to be tracked by this recognizer.
+  @protected
+  bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) {
+    return supportedDevices == null || supportedDevices!.contains(event.kind);
   }
 
   /// For a given pointer ID, returns the device kind associated with it.
@@ -164,7 +312,13 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// recognizer is being unregistered from a [GestureDetector], the
   /// GestureDetector widget calls this method).
   @mustCallSuper
-  void dispose() { }
+  void dispose() {
+    // TODO(polina-c): stop duplicating code across disposables
+    // https://github.com/flutter/flutter/issues/137435
+    if (kFlutterMemoryAllocationsEnabled) {
+      FlutterMemoryAllocations.instance.dispatchObjectDisposed(object: this);
+    }
+  }
 
   /// Returns a very short pretty description of the gesture that the
   /// recognizer looks for, like 'tap' or 'horizontal drag'.
@@ -181,8 +335,11 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
   /// e.g. the arguments passed to the callback.
   @protected
   @pragma('vm:notify-debugger-on-exception')
-  T? invokeCallback<T>(String name, RecognizerCallback<T> callback, { String Function()? debugReport }) {
-    assert(callback != null);
+  T? invokeCallback<T>(
+    String name,
+    RecognizerCallback<T> callback, {
+    String Function()? debugReport,
+  }) {
     T? result;
     try {
       assert(() {
@@ -191,7 +348,9 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
           // The 19 in the line below is the width of the prefix used by
           // _debugLogDiagnostic in arena.dart.
           final String prefix = debugPrintGestureArenaDiagnostics ? '${' ' * 19}❙ ' : '';
-          debugPrint('$prefix$this calling $name callback.${ report?.isNotEmpty == true ? " $report" : "" }');
+          debugPrint(
+            '$prefix$this calling $name callback.${(report?.isNotEmpty ?? false) ? " $report" : ""}',
+          );
         }
         return true;
       }());
@@ -199,19 +358,26 @@ abstract class GestureRecognizer extends GestureArenaMember with DiagnosticableT
     } catch (exception, stack) {
       InformationCollector? collector;
       assert(() {
-        collector = () sync* {
-          yield StringProperty('Handler', name);
-          yield DiagnosticsProperty<GestureRecognizer>('Recognizer', this, style: DiagnosticsTreeStyle.errorProperty);
-        };
+        collector =
+            () => <DiagnosticsNode>[
+              StringProperty('Handler', name),
+              DiagnosticsProperty<GestureRecognizer>(
+                'Recognizer',
+                this,
+                style: DiagnosticsTreeStyle.errorProperty,
+              ),
+            ];
         return true;
       }());
-      FlutterError.reportError(FlutterErrorDetails(
-        exception: exception,
-        stack: stack,
-        library: 'gesture',
-        context: ErrorDescription('while handling a gesture'),
-        informationCollector: collector,
-      ));
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'gesture',
+          context: ErrorDescription('while handling a gesture'),
+          informationCollector: collector,
+        ),
+      );
     }
     return result;
   }
@@ -236,18 +402,10 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   ///
   /// {@macro flutter.gestures.GestureRecognizer.supportedDevices}
   OneSequenceGestureRecognizer({
-    Object? debugOwner,
-    @Deprecated(
-      'Migrate to supportedDevices. '
-      'This feature was deprecated after v2.3.0-1.0.pre.',
-    )
-    PointerDeviceKind? kind,
-    Set<PointerDeviceKind>? supportedDevices,
-  }) : super(
-         debugOwner: debugOwner,
-         kind: kind,
-         supportedDevices: supportedDevices,
-       );
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+  });
 
   final Map<int, GestureArenaEntry> _entries = <int, GestureArenaEntry>{};
   final Set<int> _trackedPointers = HashSet<int>();
@@ -283,10 +441,10 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   void handleEvent(PointerEvent event);
 
   @override
-  void acceptGesture(int pointer) { }
+  void acceptGesture(int pointer) {}
 
   @override
-  void rejectGesture(int pointer) { }
+  void rejectGesture(int pointer) {}
 
   /// Called when the number of pointers this recognizer is tracking changes from one to zero.
   ///
@@ -302,8 +460,9 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   void resolve(GestureDisposition disposition) {
     final List<GestureArenaEntry> localEntries = List<GestureArenaEntry>.of(_entries.values);
     _entries.clear();
-    for (final GestureArenaEntry entry in localEntries)
+    for (final GestureArenaEntry entry in localEntries) {
       entry.resolve(disposition);
+    }
   }
 
   /// Resolves this recognizer's participation in the given gesture arena with
@@ -321,8 +480,9 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   @override
   void dispose() {
     resolve(GestureDisposition.rejected);
-    for (final int pointer in _trackedPointers)
-      GestureBinding.instance!.pointerRouter.removeRoute(pointer, handleEvent);
+    for (final int pointer in _trackedPointers) {
+      GestureBinding.instance.pointerRouter.removeRoute(pointer, handleEvent);
+    }
     _trackedPointers.clear();
     assert(_entries.isEmpty);
     super.dispose();
@@ -340,6 +500,7 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   /// is shortly after creating the recognizer.
   GestureArenaTeam? get team => _team;
   GestureArenaTeam? _team;
+
   /// The [team] can only be set once.
   set team(GestureArenaTeam? value) {
     assert(value != null);
@@ -350,9 +511,7 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   }
 
   GestureArenaEntry _addPointerToArena(int pointer) {
-    if (_team != null)
-      return _team!.add(pointer, this);
-    return GestureBinding.instance!.gestureArena.add(pointer, this);
+    return _team?.add(pointer, this) ?? GestureBinding.instance.gestureArena.add(pointer, this);
   }
 
   /// Causes events related to the given pointer ID to be routed to this recognizer.
@@ -371,9 +530,10 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   /// This is called by [OneSequenceGestureRecognizer.addAllowedPointer].
   @protected
   void startTrackingPointer(int pointer, [Matrix4? transform]) {
-    GestureBinding.instance!.pointerRouter.addRoute(pointer, handleEvent, transform);
+    GestureBinding.instance.pointerRouter.addRoute(pointer, handleEvent, transform);
     _trackedPointers.add(pointer);
-    assert(!_entries.containsValue(pointer));
+    // TODO(goderbauer): Enable assert after recognizers properly clean up their defunct `_entries`, see https://github.com/flutter/flutter/issues/117356.
+    // assert(!_entries.containsKey(pointer));
     _entries[pointer] = _addPointerToArena(pointer);
   }
 
@@ -386,10 +546,11 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   @protected
   void stopTrackingPointer(int pointer) {
     if (_trackedPointers.contains(pointer)) {
-      GestureBinding.instance!.pointerRouter.removeRoute(pointer, handleEvent);
+      GestureBinding.instance.pointerRouter.removeRoute(pointer, handleEvent);
       _trackedPointers.remove(pointer);
-      if (_trackedPointers.isEmpty)
+      if (_trackedPointers.isEmpty) {
         didStopTrackingLastPointer(pointer);
+      }
     }
   }
 
@@ -397,8 +558,9 @@ abstract class OneSequenceGestureRecognizer extends GestureRecognizer {
   /// a [PointerUpEvent] or a [PointerCancelEvent] event.
   @protected
   void stopTrackingIfPointerNoLongerDown(PointerEvent event) {
-    if (event is PointerUpEvent || event is PointerCancelEvent)
+    if (event is PointerUpEvent || event is PointerCancelEvent || event is PointerPanZoomEndEvent) {
       stopTrackingPointer(event.pointer);
+    }
   }
 }
 
@@ -447,13 +609,9 @@ abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecogni
     this.deadline,
     this.preAcceptSlopTolerance = kTouchSlop,
     this.postAcceptSlopTolerance = kTouchSlop,
-    Object? debugOwner,
-    @Deprecated(
-      'Migrate to supportedDevices. '
-      'This feature was deprecated after v2.3.0-1.0.pre.',
-    )
-    PointerDeviceKind? kind,
-    Set<PointerDeviceKind>? supportedDevices,
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
   }) : assert(
          preAcceptSlopTolerance == null || preAcceptSlopTolerance >= 0,
          'The preAcceptSlopTolerance must be positive or null',
@@ -461,11 +619,6 @@ abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecogni
        assert(
          postAcceptSlopTolerance == null || postAcceptSlopTolerance >= 0,
          'The postAcceptSlopTolerance must be positive or null',
-       ),
-       super(
-         debugOwner: debugOwner,
-         kind: kind,
-         supportedDevices: supportedDevices,
        );
 
   /// If non-null, the recognizer will call [didExceedDeadline] after this
@@ -531,8 +684,9 @@ abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecogni
       _state = GestureRecognizerState.possible;
       _primaryPointer = event.pointer;
       _initialPosition = OffsetPair(local: event.localPosition, global: event.position);
-      if (deadline != null)
+      if (deadline != null) {
         _timer = Timer(deadline!, () => didExceedDeadlineWithEvent(event));
+      }
     }
   }
 
@@ -556,7 +710,8 @@ abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecogni
           postAcceptSlopTolerance != null &&
           _getGlobalDistance(event) > postAcceptSlopTolerance!;
 
-      if (event is PointerMoveEvent && (isPreAcceptSlopPastTolerance || isPostAcceptSlopPastTolerance)) {
+      if (event is PointerMoveEvent &&
+          (isPreAcceptSlopPastTolerance || isPostAcceptSlopPastTolerance)) {
         resolve(GestureDisposition.rejected);
         stopTrackingPointer(primaryPointer!);
       } else {
@@ -649,22 +804,17 @@ abstract class PrimaryPointerGestureRecognizer extends OneSequenceGestureRecogni
 @immutable
 class OffsetPair {
   /// Creates a [OffsetPair] combining a [local] and [global] [Offset].
-  const OffsetPair({
-    required this.local,
-    required this.global,
-  });
+  const OffsetPair({required this.local, required this.global});
 
   /// Creates a [OffsetPair] from [PointerEvent.localPosition] and
   /// [PointerEvent.position].
-  factory OffsetPair.fromEventPosition(PointerEvent event) {
-    return OffsetPair(local: event.localPosition, global: event.position);
-  }
+  OffsetPair.fromEventPosition(PointerEvent event)
+    : local = event.localPosition,
+      global = event.position;
 
   /// Creates a [OffsetPair] from [PointerEvent.localDelta] and
   /// [PointerEvent.delta].
-  factory OffsetPair.fromEventDelta(PointerEvent event) {
-    return OffsetPair(local: event.localDelta, global: event.delta);
-  }
+  OffsetPair.fromEventDelta(PointerEvent event) : local = event.localDelta, global = event.delta;
 
   /// A [OffsetPair] where both [Offset]s are [Offset.zero].
   static const OffsetPair zero = OffsetPair(local: Offset.zero, global: Offset.zero);
@@ -677,19 +827,13 @@ class OffsetPair {
   final Offset global;
 
   /// Adds the `other.global` to [global] and `other.local` to [local].
-  OffsetPair operator+(OffsetPair other) {
-    return OffsetPair(
-      local: local + other.local,
-      global: global + other.global,
-    );
+  OffsetPair operator +(OffsetPair other) {
+    return OffsetPair(local: local + other.local, global: global + other.global);
   }
 
   /// Subtracts the `other.global` from [global] and `other.local` from [local].
-  OffsetPair operator-(OffsetPair other) {
-    return OffsetPair(
-      local: local - other.local,
-      global: global - other.global,
-    );
+  OffsetPair operator -(OffsetPair other) {
+    return OffsetPair(local: local - other.local, global: global - other.global);
   }
 
   @override

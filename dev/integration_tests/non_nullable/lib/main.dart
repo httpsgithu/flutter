@@ -4,23 +4,21 @@
 
 import 'package:flutter/material.dart';
 
-String? unused;
+String? unused; // ignore: unreachable_from_main
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: const Center(child: Text('hello, world'))
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const Center(child: Text('hello, world')),
     );
   }
 }

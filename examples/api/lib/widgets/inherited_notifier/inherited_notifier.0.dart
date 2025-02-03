@@ -2,45 +2,33 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for InheritedNotifier
-
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [InheritedNotifier].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const InheritedNotifierExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class InheritedNotifierExampleApp extends StatelessWidget {
+  const InheritedNotifierExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatefulWidget(),
-    );
+    return const MaterialApp(home: InheritedNotifierExample());
   }
 }
 
 class SpinModel extends InheritedNotifier<AnimationController> {
-  const SpinModel({
-    Key? key,
-    AnimationController? notifier,
-    required Widget child,
-  }) : super(key: key, notifier: notifier, child: child);
+  const SpinModel({super.key, super.notifier, required super.child});
 
   static double of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<SpinModel>()!
-        .notifier!
-        .value;
+    return context.dependOnInheritedWidgetOfExactType<SpinModel>()!.notifier!.value;
   }
 }
 
 class Spinner extends StatelessWidget {
-  const Spinner({Key? key}) : super(key: key);
+  const Spinner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,33 +38,29 @@ class Spinner extends StatelessWidget {
         width: 100,
         height: 100,
         color: Colors.green,
-        child: const Center(
-          child: Text('Whee!'),
-        ),
+        child: const Center(child: Text('Whee!')),
       ),
     );
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class InheritedNotifierExample extends StatefulWidget {
+  const InheritedNotifierExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<InheritedNotifierExample> createState() => _InheritedNotifierExampleState();
 }
 
-/// AnimationControllers can be created with `vsync: this` because of TickerProviderStateMixin.
-class _MyStatefulWidgetState extends State<MyStatefulWidget>
+/// [AnimationController]s can be created with `vsync: this` because of
+/// [TickerProviderStateMixin].
+class _InheritedNotifierExampleState extends State<InheritedNotifierExample>
     with TickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 10),
-      vsync: this,
-    )..repeat();
+    _controller = AnimationController(duration: const Duration(seconds: 10), vsync: this)..repeat();
   }
 
   @override
@@ -89,13 +73,9 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
   Widget build(BuildContext context) {
     return SpinModel(
       notifier: _controller,
-      child: Row(
+      child: const Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: const <Widget>[
-          Spinner(),
-          Spinner(),
-          Spinner(),
-        ],
+        children: <Widget>[Spinner(), Spinner(), Spinner()],
       ),
     );
   }

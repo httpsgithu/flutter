@@ -2,14 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui';
 import 'package:flutter/animation.dart';
 
 import '../common.dart';
 
 const int _kNumIters = 10000;
 
-void _testCurve(Curve curve, {required String name, required String description, required BenchmarkResultPrinter printer}) {
+void _testCurve(
+  Curve curve, {
+  required String name,
+  required String description,
+  required BenchmarkResultPrinter printer,
+}) {
   final Stopwatch watch = Stopwatch();
   print('$description benchmark...');
   watch.start();
@@ -28,7 +32,7 @@ void _testCurve(Curve curve, {required String name, required String description,
 }
 
 void main() {
-  assert(false, "Don't run benchmarks in checked mode! Use 'flutter run --release'.");
+  assert(false, "Don't run benchmarks in debug mode! Use 'flutter run --release'.");
   final BenchmarkResultPrinter printer = BenchmarkResultPrinter();
   _testCurve(
     const Cubic(0.0, 0.25, 0.5, 1.0),

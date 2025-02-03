@@ -8,7 +8,7 @@ import '../model/product.dart';
 import 'product_columns.dart';
 
 class AsymmetricView extends StatelessWidget {
-  const AsymmetricView({Key? key, this.products}) : super(key: key);
+  const AsymmetricView({super.key, this.products});
 
   final List<Product>? products;
 
@@ -33,23 +33,16 @@ class AsymmetricView extends StatelessWidget {
         final int bottom = _evenCasesIndex(index);
         column = TwoProductCardColumn(
           bottom: products![bottom],
-          top: products!.length - 1 >= bottom + 1
-            ? products![bottom + 1]
-            : null,
+          top: products!.length - 1 >= bottom + 1 ? products![bottom + 1] : null,
         );
         width += 32.0;
       } else {
         /// Odd cases
-        column = OneProductCardColumn(
-          product: products![_oddCasesIndex(index)],
-        );
+        column = OneProductCardColumn(product: products![_oddCasesIndex(index)]);
       }
       return SizedBox(
         width: width,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: column,
-        ),
+        child: Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0), child: column),
       );
     }).toList();
   }
@@ -68,9 +61,7 @@ class AsymmetricView extends StatelessWidget {
   }
 
   int _listItemCount(int totalItems) {
-    return (totalItems % 3 == 0)
-      ? totalItems ~/ 3 * 2
-      : (totalItems / 3).ceil() * 2 - 1;
+    return (totalItems % 3 == 0) ? totalItems ~/ 3 * 2 : (totalItems / 3).ceil() * 2 - 1;
   }
 
   @override

@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// @dart = 2.8
-
 import 'dart:async';
 import 'dart:io';
 
@@ -20,26 +18,22 @@ import '../src/testbed.dart';
 
 void main() {
   group('Testbed', () {
-
     test('Can provide default interfaces', () async {
       final Testbed testbed = Testbed();
 
-      FileSystem localFileSystem;
+      late FileSystem localFileSystem;
       await testbed.run(() {
         localFileSystem = globals.fs;
       });
 
       expect(localFileSystem, isA<ErrorHandlingFileSystem>());
-      expect((localFileSystem as ErrorHandlingFileSystem).fileSystem,
-             isA<MemoryFileSystem>());
+      expect((localFileSystem as ErrorHandlingFileSystem).fileSystem, isA<MemoryFileSystem>());
     });
 
     test('Can provide setup interfaces', () async {
-      final Testbed testbed = Testbed(overrides: <Type, Generator>{
-        A: () => A(),
-      });
+      final Testbed testbed = Testbed(overrides: <Type, Generator>{A: () => A()});
 
-      A instance;
+      A? instance;
       await testbed.run(() {
         instance = context.get<A>();
       });
@@ -48,16 +42,12 @@ void main() {
     });
 
     test('Can provide local overrides', () async {
-      final Testbed testbed = Testbed(overrides: <Type, Generator>{
-        A: () => A(),
-      });
+      final Testbed testbed = Testbed(overrides: <Type, Generator>{A: () => A()});
 
-      A instance;
+      A? instance;
       await testbed.run(() {
         instance = context.get<A>();
-      }, overrides: <Type, Generator>{
-        A: () => B(),
-      });
+      }, overrides: <Type, Generator>{A: () => B()});
 
       expect(instance, isA<B>());
     });
@@ -77,30 +67,31 @@ void main() {
     test('Throws StateError if Timer is left pending', () async {
       final Testbed testbed = Testbed();
 
-      expect(testbed.run(() async {
-        Timer.periodic(const Duration(seconds: 1), (Timer timer) { });
-      }), throwsStateError);
+      expect(
+        testbed.run(() async {
+          Timer.periodic(const Duration(seconds: 1), (Timer timer) {});
+        }),
+        throwsStateError,
+      );
     });
 
     test("Doesn't throw a StateError if Timer is left cleaned up", () async {
       final Testbed testbed = Testbed();
 
       await testbed.run(() async {
-        final Timer timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) { });
+        final Timer timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {});
         timer.cancel();
       });
     });
 
-    test('Throws if ProcessUtils is injected',() {
-      final Testbed testbed = Testbed(overrides: <Type, Generator>{
-        ProcessUtils: () => null,
-      });
+    test('Throws if ProcessUtils is injected', () {
+      final Testbed testbed = Testbed(overrides: <Type, Generator>{ProcessUtils: () => null});
 
       expect(() => testbed.run(() {}), throwsStateError);
     });
   });
 }
 
-class A { }
+class A {}
 
-class B extends A { }
+class B extends A {}

@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 
 class AnimationWithMicrotasks extends StatefulWidget {
-  const AnimationWithMicrotasks({Key? key}) : super(key: key);
+  const AnimationWithMicrotasks({super.key});
 
   @override
   State<AnimationWithMicrotasks> createState() => _AnimationWithMicrotasksState();
@@ -30,13 +30,7 @@ class _AnimationWithMicrotasksState extends State<AnimationWithMicrotasks> {
   Widget build(BuildContext context) {
     return const Scaffold(
       backgroundColor: Colors.grey,
-      body: Center(
-        child: SizedBox(
-          width: 200,
-          height: 100,
-          child: LinearProgressIndicator(),
-        ),
-      ),
+      body: Center(child: SizedBox(width: 200, height: 100, child: LinearProgressIndicator())),
     );
   }
 }

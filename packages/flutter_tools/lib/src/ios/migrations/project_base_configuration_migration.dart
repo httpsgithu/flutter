@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import '../../base/file_system.dart';
-import '../../base/logger.dart';
 import '../../base/project_migrator.dart';
 import '../../xcode_project.dart';
 
@@ -11,17 +10,18 @@ import '../../xcode_project.dart';
 // However the top-level Runner project should not inherit any build configuration so
 // the Flutter build settings do not stomp on non-Flutter targets.
 class ProjectBaseConfigurationMigration extends ProjectMigrator {
-  ProjectBaseConfigurationMigration(IosProject project, Logger logger)
-    : _xcodeProjectInfoFile = project.xcodeProjectInfoFile,
-      super(logger);
+  ProjectBaseConfigurationMigration(IosProject project, super.logger)
+    : _xcodeProjectInfoFile = project.xcodeProjectInfoFile;
 
   final File _xcodeProjectInfoFile;
 
   @override
-  bool migrate() {
+  Future<void> migrate() async {
     if (!_xcodeProjectInfoFile.existsSync()) {
-      logger.printTrace('Xcode project not found, skipping Runner project build settings and configuration migration');
-      return true;
+      logger.printTrace(
+        'Xcode project not found, skipping Runner project build settings and configuration migration',
+      );
+      return;
     }
 
     final String originalProjectContents = _xcodeProjectInfoFile.readAsStringSync();
@@ -56,7 +56,10 @@ class ProjectBaseConfigurationMigration extends ProjectMigrator {
 		$debugIdentifier /* Debug */ = {
 			isa = XCBuildConfiguration;
 ''';
-    String newProjectContents = originalProjectContents.replaceAll(debugBaseConfigurationOriginal, debugBaseConfigurationReplacement);
+    String newProjectContents = originalProjectContents.replaceAll(
+      debugBaseConfigurationOriginal,
+      debugBaseConfigurationReplacement,
+    );
 
     // Profile
     final String profileBaseConfigurationOriginal = '''
@@ -68,7 +71,10 @@ class ProjectBaseConfigurationMigration extends ProjectMigrator {
 		$profileIdentifier /* Profile */ = {
 			isa = XCBuildConfiguration;
 ''';
-    newProjectContents = newProjectContents.replaceAll(profileBaseConfigurationOriginal, profileBaseConfigurationReplacement);
+    newProjectContents = newProjectContents.replaceAll(
+      profileBaseConfigurationOriginal,
+      profileBaseConfigurationReplacement,
+    );
 
     // Release
     final String releaseBaseConfigurationOriginal = '''
@@ -81,11 +87,13 @@ class ProjectBaseConfigurationMigration extends ProjectMigrator {
 			isa = XCBuildConfiguration;
 ''';
 
-    newProjectContents = newProjectContents.replaceAll(releaseBaseConfigurationOriginal, releaseBaseConfigurationReplacement);
+    newProjectContents = newProjectContents.replaceAll(
+      releaseBaseConfigurationOriginal,
+      releaseBaseConfigurationReplacement,
+    );
     if (originalProjectContents != newProjectContents) {
       logger.printStatus('Project base configurations detected, removing.');
       _xcodeProjectInfoFile.writeAsStringSync(newProjectContents);
     }
-    return true;
   }
 }

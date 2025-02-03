@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'rendering_tester.dart';
 
 void main() {
+  TestRenderingFlutterBinding.ensureInitialized();
+
   test('offstage', () {
     RenderBox child;
     bool painted = false;
@@ -18,11 +20,14 @@ void main() {
         child: RenderOffstage(
           child: RenderCustomPaint(
             painter: TestCallbackPainter(
-              onPaint: () { painted = true; },
+              onPaint: () {
+                painted = true;
+              },
             ),
-            child: child = RenderConstrainedBox(
-              additionalConstraints: const BoxConstraints.tightFor(height: 10.0, width: 10.0),
-            ),
+            child:
+                child = RenderConstrainedBox(
+                  additionalConstraints: const BoxConstraints.tightFor(height: 10.0, width: 10.0),
+                ),
           ),
         ),
       ),

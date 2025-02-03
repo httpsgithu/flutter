@@ -2,42 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for Notification
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [Notification].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const NotificationExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class NotificationExampleApp extends StatelessWidget {
+  const NotificationExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatelessWidget(),
-    );
+    return const MaterialApp(home: NotificationExample());
   }
 }
 
-class MyStatelessWidget extends StatelessWidget {
-  const MyStatelessWidget({Key? key}) : super(key: key);
+class NotificationExample extends StatelessWidget {
+  const NotificationExample({super.key});
+
+  static const List<String> _tabs = <String>['Months', 'Days'];
+  static const List<String> _months = <String>['January', 'February', 'March'];
+  static const List<String> _days = <String>['Sunday', 'Monday', 'Tuesday'];
 
   @override
   Widget build(BuildContext context) {
-    const List<String> _tabs = <String>['Months', 'Days'];
-    const List<String> _months = <String>[
-      'January',
-      'February',
-      'March',
-    ];
-    const List<String> _days = <String>[
-      'Sunday',
-      'Monday',
-      'Tuesday',
-    ];
     return DefaultTabController(
       length: _tabs.length,
       child: Scaffold(
@@ -53,16 +41,13 @@ class MyStatelessWidget extends StatelessWidget {
             return true;
           },
           child: NestedScrollView(
-            headerSliverBuilder:
-                (BuildContext context, bool innerBoxIsScrolled) {
+            headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
               return <Widget>[
                 SliverAppBar(
-                  title: const Text('Flutter Code Sample'),
+                  title: const Text('Notification Sample'),
                   pinned: true,
                   floating: true,
-                  bottom: TabBar(
-                    tabs: _tabs.map((String name) => Tab(text: name)).toList(),
-                  ),
+                  bottom: TabBar(tabs: _tabs.map((String name) => Tab(text: name)).toList()),
                 ),
               ];
             },

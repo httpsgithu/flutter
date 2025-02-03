@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for ScrollMetricsNotification
-
 import 'package:flutter/material.dart';
+
+/// Flutter code sample for [ScrollMetricsNotification].
 
 void main() => runApp(const ScrollMetricsDemo());
 
 class ScrollMetricsDemo extends StatefulWidget {
-  const ScrollMetricsDemo({Key? key}) : super(key: key);
+  const ScrollMetricsDemo({super.key});
 
   @override
   State<ScrollMetricsDemo> createState() => ScrollMetricsDemoState();
@@ -22,34 +22,27 @@ class ScrollMetricsDemoState extends State<ScrollMetricsDemo> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('ScrollMetrics Demo'),
-        ),
+        appBar: AppBar(title: const Text('ScrollMetrics Demo')),
         floatingActionButton: FloatingActionButton(
           child: const Icon(Icons.add),
-          onPressed: () => setState(() {
-            windowSize += 10.0;
-          }),
+          onPressed:
+              () => setState(() {
+                windowSize += 10.0;
+              }),
         ),
         body: NotificationListener<ScrollMetricsNotification>(
           onNotification: (ScrollMetricsNotification notification) {
-            ScaffoldMessenger.of(notification.context).showSnackBar(
-              const SnackBar(
-                content: Text('Scroll metrics changed!'),
-              ),
-            );
+            ScaffoldMessenger.of(
+              notification.context,
+            ).showSnackBar(const SnackBar(content: Text('Scroll metrics changed!')));
             return false;
           },
           child: Scrollbar(
-            isAlwaysShown: true,
+            thumbVisibility: true,
             child: SizedBox(
               height: windowSize,
               width: double.infinity,
-              child: const SingleChildScrollView(
-                child: FlutterLogo(
-                  size: 300.0,
-                ),
-              ),
+              child: const SingleChildScrollView(primary: true, child: FlutterLogo(size: 300.0)),
             ),
           ),
         ),

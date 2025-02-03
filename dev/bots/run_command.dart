@@ -18,7 +18,9 @@ import 'utils.dart';
 /// If `expectNonZeroExit` is false and the process exits with a non-zero exit
 /// code fails the test immediately by exiting the test process with exit code
 /// 1.
-Stream<String> runAndGetStdout(String executable, List<String> arguments, {
+Stream<String> runAndGetStdout(
+  String executable,
+  List<String> arguments, {
   String? workingDirectory,
   Map<String, String>? environment,
   bool expectNonZeroExit = false,
@@ -50,23 +52,9 @@ class Command {
 
   /// The raw process that was launched for this command.
   final io.Process process;
-
   final Stopwatch _time;
-  final Future<List<List<int>>>? _savedStdout;
-  final Future<List<List<int>>>? _savedStderr;
-
-  /// Evaluates when the [process] exits.
-  ///
-  /// Returns the result of running the command.
-  Future<CommandResult> get onExit async {
-    final int exitCode = await process.exitCode;
-    _time.stop();
-
-    // Saved output is null when OutputMode.print is used.
-    final String? flattenedStdout = _savedStdout != null ? _flattenToString((await _savedStdout)!) : null;
-    final String? flattenedStderr = _savedStderr != null ? _flattenToString((await _savedStderr)!) : null;
-    return CommandResult._(exitCode, _time.elapsed, flattenedStdout, flattenedStderr);
-  }
+  final Future<String> _savedStdout;
+  final Future<String> _savedStderr;
 }
 
 /// The result of running a command using [startCommand] and [runCommand];
@@ -96,61 +84,69 @@ class CommandResult {
 ///
 /// `outputMode` controls where the standard output from the command process
 /// goes. See [OutputMode].
-Future<Command> startCommand(String executable, List<String> arguments, {
+Future<Command> startCommand(
+  String executable,
+  List<String> arguments, {
   String? workingDirectory,
   Map<String, String>? environment,
   OutputMode outputMode = OutputMode.print,
   bool Function(String)? removeLine,
   void Function(String, io.Process)? outputListener,
 }) async {
-  final String commandDescription = '${path.relative(executable, from: workingDirectory)} ${arguments.join(' ')}';
   final String relativeWorkingDir = path.relative(workingDirectory ?? io.Directory.current.path);
-  printProgress('RUNNING', relativeWorkingDir, commandDescription);
+  final String commandDescription =
+      '${path.relative(executable, from: workingDirectory)} ${arguments.join(' ')}';
+  print('RUNNING: cd $cyan$relativeWorkingDir$reset; $green$commandDescription$reset');
 
   final Stopwatch time = Stopwatch()..start();
-  final io.Process process = await io.Process.start(executable, arguments,
+  print('workingDirectory: $workingDirectory, executable: $executable, arguments: $arguments');
+  final io.Process process = await io.Process.start(
+    executable,
+    arguments,
     workingDirectory: workingDirectory,
     environment: environment,
   );
-
-  Future<List<List<int>>> savedStdout = Future<List<List<int>>>.value(<List<int>>[]);
-  Future<List<List<int>>> savedStderr = Future<List<List<int>>>.value(<List<int>>[]);
-  final Stream<List<int>> stdoutSource = process.stdout
-    .transform<String>(const Utf8Decoder())
-    .transform(const LineSplitter())
-    .where((String line) => removeLine == null || !removeLine(line))
-    .map((String line) {
-      final String formattedLine = '$line\n';
-      if (outputListener != null) {
-        outputListener(formattedLine, process);
-      }
-      return formattedLine;
-    })
-    .transform(const Utf8Encoder());
-  switch (outputMode) {
-    case OutputMode.print:
-      stdoutSource.listen((List<int> output) {
-        io.stdout.add(output);
-        savedStdout.then((List<List<int>> list) => list.add(output));
-      });
-      process.stderr.listen((List<int> output) {
-        io.stdout.add(output);
-        savedStdout.then((List<List<int>> list) => list.add(output));
-      });
-      break;
-    case OutputMode.capture:
-      savedStdout = stdoutSource.toList();
-      savedStderr = process.stderr.toList();
-      break;
-  }
-
-  return Command._(process, time, savedStdout, savedStderr);
+  return Command._(
+    process,
+    time,
+    process.stdout
+        .transform<String>(const Utf8Decoder())
+        .transform(const LineSplitter())
+        .where((String line) => removeLine == null || !removeLine(line))
+        .map<String>((String line) {
+          final String formattedLine = '$line\n';
+          if (outputListener != null) {
+            outputListener(formattedLine, process);
+          }
+          switch (outputMode) {
+            case OutputMode.print:
+              print(line);
+            case OutputMode.capture:
+              break;
+          }
+          return line;
+        })
+        .join('\n'),
+    process.stderr
+        .transform<String>(const Utf8Decoder())
+        .transform(const LineSplitter())
+        .map<String>((String line) {
+          switch (outputMode) {
+            case OutputMode.print:
+              print(line);
+            case OutputMode.capture:
+              break;
+          }
+          return line;
+        })
+        .join('\n'),
+  );
 }
 
 /// Runs the `executable` and waits until the process exits.
 ///
-/// If the process exits with a non-zero exit code, exits this process with
-/// exit code 1, unless `expectNonZeroExit` is set to true.
+/// If the process exits with a non-zero exit code and `expectNonZeroExit` is
+/// false, calls foundError (which does not terminate execution!).
 ///
 /// `outputListener` is called for every line of standard output from the
 /// process, and is given the [Process] object. This can be used to interrupt
@@ -161,7 +157,9 @@ Future<Command> startCommand(String executable, List<String> arguments, {
 ///
 /// `outputMode` controls where the standard output from the command process
 /// goes. See [OutputMode].
-Future<CommandResult> runCommand(String executable, List<String> arguments, {
+Future<CommandResult> runCommand(
+  String executable,
+  List<String> arguments, {
   String? workingDirectory,
   Map<String, String>? environment,
   bool expectNonZeroExit = false,
@@ -171,10 +169,22 @@ Future<CommandResult> runCommand(String executable, List<String> arguments, {
   bool Function(String)? removeLine,
   void Function(String, io.Process)? outputListener,
 }) async {
-  final String commandDescription = '${path.relative(executable, from: workingDirectory)} ${arguments.join(' ')}';
-  final String relativeWorkingDir = path.relative(workingDirectory ?? io.Directory.current.path);
+  final String commandDescription =
+      '${path.relative(executable, from: workingDirectory)} ${arguments.join(' ')}';
+  final String relativeWorkingDir = workingDirectory ?? path.relative(io.Directory.current.path);
+  if (dryRun) {
+    printProgress(_prettyPrintRunCommand(executable, arguments, workingDirectory));
+    return CommandResult._(
+      0,
+      Duration.zero,
+      '$executable ${arguments.join(' ')}',
+      'Simulated execution due to --dry-run',
+    );
+  }
 
-  final Command command = await startCommand(executable, arguments,
+  final Command command = await startCommand(
+    executable,
+    arguments,
     workingDirectory: workingDirectory,
     environment: environment,
     outputMode: outputMode,
@@ -182,35 +192,60 @@ Future<CommandResult> runCommand(String executable, List<String> arguments, {
     outputListener: outputListener,
   );
 
-  final CommandResult result = await command.onExit;
+  final CommandResult result = CommandResult._(
+    await command.process.exitCode,
+    command._time.elapsed,
+    await command._savedStdout,
+    await command._savedStderr,
+  );
 
-  if ((result.exitCode == 0) == expectNonZeroExit || (expectedExitCode != null && result.exitCode != expectedExitCode)) {
+  if ((result.exitCode == 0) == expectNonZeroExit ||
+      (expectedExitCode != null && result.exitCode != expectedExitCode)) {
     // Print the output when we get unexpected results (unless output was
     // printed already).
     switch (outputMode) {
       case OutputMode.print:
         break;
       case OutputMode.capture:
-        io.stdout.writeln(result.flattenedStdout);
-        io.stdout.writeln(result.flattenedStderr);
-        break;
+        print(result.flattenedStdout);
+        print(result.flattenedStderr);
     }
-    exitWithError(<String>[
-      if (failureMessage != null)
-        failureMessage
-      else
-        '${bold}ERROR: ${red}Last command exited with ${result.exitCode} (expected: ${expectNonZeroExit ? (expectedExitCode ?? 'non-zero') : 'zero'}).$reset',
+    final String allOutput = '${result.flattenedStdout}\n${result.flattenedStderr}';
+    foundError(<String>[
+      if (failureMessage != null) failureMessage,
       '${bold}Command: $green$commandDescription$reset',
-      '${bold}Relative working directory: $cyan$relativeWorkingDir$reset',
+      if (failureMessage == null)
+        '$bold${red}Command exited with exit code ${result.exitCode} but expected ${expectNonZeroExit ? (expectedExitCode ?? 'non-zero') : 'zero'} exit code.$reset',
+      '${bold}Working directory: $cyan${path.absolute(relativeWorkingDir)}$reset',
+      if (allOutput.isNotEmpty && allOutput.length < 512)
+        '${bold}stdout and stderr output:\n$allOutput',
     ]);
+  } else {
+    print(
+      'ELAPSED TIME: ${prettyPrintDuration(result.elapsedTime)} for $green$commandDescription$reset in $cyan$relativeWorkingDir$reset',
+    );
   }
-  print('$clock ELAPSED TIME: ${prettyPrintDuration(result.elapsedTime)} for $green$commandDescription$reset in $cyan$relativeWorkingDir$reset');
   return result;
 }
 
-/// Flattens a nested list of UTF-8 code units into a single string.
-String _flattenToString(List<List<int>> chunks) =>
-  utf8.decode(chunks.expand<int>((List<int> ints) => ints).toList());
+final String _flutterRoot = path.dirname(
+  path.dirname(path.dirname(path.fromUri(io.Platform.script))),
+);
+
+String _prettyPrintRunCommand(String executable, List<String> arguments, String? workingDirectory) {
+  final StringBuffer output = StringBuffer();
+
+  // Print CWD relative to the root.
+  output.write('|> ');
+  output.write(path.relative(executable, from: _flutterRoot));
+  if (workingDirectory != null) {
+    output.write(' (${path.relative(workingDirectory, from: _flutterRoot)})');
+  }
+  output.writeln(': ');
+  output.writeAll(arguments.map((String a) => '  $a'), '\n');
+
+  return output.toString();
+}
 
 /// Specifies what to do with the command output from [runCommand] and [startCommand].
 enum OutputMode {

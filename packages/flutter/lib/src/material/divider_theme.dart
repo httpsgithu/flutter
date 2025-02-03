@@ -2,12 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'data_table.dart';
+/// @docImport 'divider.dart';
+/// @docImport 'list_tile.dart';
+library;
+
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
+
+// Examples can assume:
+// late BuildContext context;
 
 /// Defines the visual properties of [Divider], [VerticalDivider], dividers
 /// between [ListTile]s, and dividers between rows in [DataTable]s.
@@ -28,22 +36,15 @@ import 'theme.dart';
 ///    application.
 @immutable
 class DividerThemeData with Diagnosticable {
-
   /// Creates a theme that can be used for [DividerTheme] or
   /// [ThemeData.dividerTheme].
-  const DividerThemeData({
-    this.color,
-    this.space,
-    this.thickness,
-    this.indent,
-    this.endIndent,
-  });
+  const DividerThemeData({this.color, this.space, this.thickness, this.indent, this.endIndent});
 
   /// The color of [Divider]s and [VerticalDivider]s, also
   /// used between [ListTile]s, between rows in [DataTable]s, and so forth.
   final Color? color;
 
-  /// The [Divider]'s width or the [VerticalDivider]'s height.
+  /// The [Divider]'s height or the [VerticalDivider]'s width.
   ///
   /// This represents the amount of horizontal or vertical space the divider
   /// takes up.
@@ -80,11 +81,11 @@ class DividerThemeData with Diagnosticable {
 
   /// Linearly interpolate between two Divider themes.
   ///
-  /// The argument `t` must not be null.
-  ///
   /// {@macro dart.ui.shadow.lerp}
   static DividerThemeData lerp(DividerThemeData? a, DividerThemeData? b, double t) {
-    assert(t != null);
+    if (identical(a, b) && a != null) {
+      return a;
+    }
     return DividerThemeData(
       color: Color.lerp(a?.color, b?.color, t),
       space: lerpDouble(a?.space, b?.space, t),
@@ -95,28 +96,22 @@ class DividerThemeData with Diagnosticable {
   }
 
   @override
-  int get hashCode {
-    return hashValues(
-      color,
-      space,
-      thickness,
-      indent,
-      endIndent,
-    );
-  }
+  int get hashCode => Object.hash(color, space, thickness, indent, endIndent);
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other))
+    if (identical(this, other)) {
       return true;
-    if (other.runtimeType != runtimeType)
+    }
+    if (other.runtimeType != runtimeType) {
       return false;
-    return other is DividerThemeData
-        && other.color == color
-        && other.space == space
-        && other.thickness == thickness
-        && other.indent == indent
-        && other.endIndent == endIndent;
+    }
+    return other is DividerThemeData &&
+        other.color == color &&
+        other.space == space &&
+        other.thickness == thickness &&
+        other.indent == indent &&
+        other.endIndent == endIndent;
   }
 
   @override
@@ -137,12 +132,7 @@ class DividerTheme extends InheritedTheme {
   /// Creates a divider theme that controls the configurations for
   /// [Divider]s, [VerticalDivider]s, dividers between [ListTile]s, and dividers
   /// between rows in [DataTable]s in its widget subtree.
-  const DividerTheme({
-    Key? key,
-    required this.data,
-    required Widget child,
-  }) : assert(data != null),
-       super(key: key, child: child);
+  const DividerTheme({super.key, required this.data, required super.child});
 
   /// The properties for descendant [Divider]s, [VerticalDivider]s, dividers
   /// between [ListTile]s, and dividers between rows in [DataTable]s.

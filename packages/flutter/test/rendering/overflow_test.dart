@@ -8,16 +8,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'rendering_tester.dart';
 
 void main() {
+  TestRenderingFlutterBinding.ensureInitialized();
+
   test('overflow should not affect baseline', () {
     RenderBox root, child, text;
     late double baseline1, baseline2, height1, height2;
 
     root = RenderPositionedBox(
       child: RenderCustomPaint(
-        child: child = text = RenderParagraph(
-          const TextSpan(text: 'Hello World'),
-          textDirection: TextDirection.ltr,
-        ),
+        child:
+            child =
+                text = RenderParagraph(
+                  const TextSpan(text: 'Hello World'),
+                  textDirection: TextDirection.ltr,
+                ),
         painter: TestCallbackPainter(
           onPaint: () {
             baseline1 = child.getDistanceToBaseline(TextBaseline.alphabetic)!;
@@ -30,14 +34,16 @@ void main() {
 
     root = RenderPositionedBox(
       child: RenderCustomPaint(
-        child: child = RenderConstrainedOverflowBox(
-          child: text = RenderParagraph(
-            const TextSpan(text: 'Hello World'),
-            textDirection: TextDirection.ltr,
-          ),
-          maxHeight: height1 / 2.0,
-          alignment: Alignment.topLeft,
-        ),
+        child:
+            child = RenderConstrainedOverflowBox(
+              child:
+                  text = RenderParagraph(
+                    const TextSpan(text: 'Hello World'),
+                    textDirection: TextDirection.ltr,
+                  ),
+              maxHeight: height1 / 2.0,
+              alignment: Alignment.topLeft,
+            ),
         painter: TestCallbackPainter(
           onPaint: () {
             baseline2 = child.getDistanceToBaseline(TextBaseline.alphabetic)!;

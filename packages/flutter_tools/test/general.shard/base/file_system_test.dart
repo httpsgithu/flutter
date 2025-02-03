@@ -7,13 +7,22 @@ import 'dart:io' as io;
 
 import 'package:file/memory.dart';
 import 'package:file_testing/file_testing.dart';
+import 'package:flutter_tools/src/base/common.dart';
 import 'package:flutter_tools/src/base/file_system.dart';
 import 'package:flutter_tools/src/base/io.dart';
+import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/platform.dart';
 import 'package:flutter_tools/src/base/signals.dart';
 import 'package:test/fake.dart';
 
 import '../../src/common.dart';
+
+class LocalFileSystemFake extends LocalFileSystem {
+  LocalFileSystemFake.test({required super.signals}) : super.test();
+
+  @override
+  Directory get superSystemTempDirectory => directory('/does_not_exist');
+}
 
 void main() {
   group('fsUtils', () {
@@ -22,15 +31,11 @@ void main() {
 
     setUp(() {
       fs = MemoryFileSystem.test();
-      fsUtils = FileSystemUtils(
-        fileSystem: fs,
-        platform: FakePlatform(),
-      );
+      fsUtils = FileSystemUtils(fileSystem: fs, platform: FakePlatform());
     });
 
     testWithoutContext('getUniqueFile creates a unique file name', () async {
-      final File fileA = fsUtils.getUniqueFile(fs.currentDirectory, 'foo', 'json')
-        ..createSync();
+      final File fileA = fsUtils.getUniqueFile(fs.currentDirectory, 'foo', 'json')..createSync();
       final File fileB = fsUtils.getUniqueFile(fs.currentDirectory, 'foo', 'json');
 
       expect(fileA.path, '/foo_01.json');
@@ -53,7 +58,9 @@ void main() {
     testWithoutContext('test directory copy', () async {
       final MemoryFileSystem sourceMemoryFs = MemoryFileSystem.test();
       const String sourcePath = '/some/origin';
-      final Directory sourceDirectory = await sourceMemoryFs.directory(sourcePath).create(recursive: true);
+      final Directory sourceDirectory = await sourceMemoryFs
+          .directory(sourcePath)
+          .create(recursive: true);
       sourceMemoryFs.currentDirectory = sourcePath;
       final File sourceFile1 = sourceMemoryFs.file('some_file.txt')..writeAsStringSync('bleh');
       final DateTime writeTime = sourceFile1.lastModifiedSync();
@@ -79,19 +86,189 @@ void main() {
       expect(sourceMemoryFs.directory(sourcePath).listSync().length, 3);
     });
 
+    testWithoutContext('test directory copy with followLinks: true', () async {
+      final Signals signals = Signals.test();
+      final LocalFileSystem fileSystem = LocalFileSystem.test(signals: signals);
+      final Directory tempDir = fileSystem.systemTempDirectory.createTempSync(
+        'flutter_copy_directory.',
+      );
+      try {
+        final String sourcePath = io.Platform.isWindows ? r'some\origin' : 'some/origin';
+        final Directory sourceDirectory = tempDir.childDirectory(sourcePath)
+          ..createSync(recursive: true);
+        final File sourceFile1 = sourceDirectory.childFile('some_file.txt')
+          ..writeAsStringSync('file 1');
+        sourceDirectory.childLink('absolute_linked.txt').createSync(sourceFile1.absolute.path);
+        final DateTime writeTime = sourceFile1.lastModifiedSync();
+        final Directory sourceSubDirectory = sourceDirectory
+          .childDirectory('dir1')
+          .childDirectory('dir2')..createSync(recursive: true);
+        sourceSubDirectory.childFile('another_file.txt').writeAsStringSync('file 2');
+        final String subdirectorySourcePath = io.Platform.isWindows ? r'dir1\dir2' : 'dir1/dir2';
+        sourceDirectory.childLink('relative_linked_sub_dir').createSync(subdirectorySourcePath);
+        sourceDirectory.childDirectory('empty_directory').createSync(recursive: true);
+
+        final String targetPath =
+            io.Platform.isWindows ? r'some\non-existent\target' : 'some/non-existent/target';
+        final Directory targetDirectory = tempDir.childDirectory(targetPath);
+
+        copyDirectory(sourceDirectory, targetDirectory);
+
+        expect(targetDirectory.existsSync(), true);
+        expect(targetDirectory.childFile('some_file.txt').existsSync(), true);
+        expect(targetDirectory.childFile('some_file.txt').readAsStringSync(), 'file 1');
+        expect(targetDirectory.childFile('absolute_linked.txt').readAsStringSync(), 'file 1');
+        expect(targetDirectory.childLink('absolute_linked.txt').existsSync(), false);
+        expect(targetDirectory.childDirectory('dir1').childDirectory('dir2').existsSync(), true);
+        expect(
+          targetDirectory
+              .childDirectory('dir1')
+              .childDirectory('dir2')
+              .childFile('another_file.txt')
+              .existsSync(),
+          true,
+        );
+        expect(
+          targetDirectory
+              .childDirectory('dir1')
+              .childDirectory('dir2')
+              .childFile('another_file.txt')
+              .readAsStringSync(),
+          'file 2',
+        );
+        expect(targetDirectory.childDirectory('relative_linked_sub_dir').existsSync(), true);
+        expect(targetDirectory.childLink('relative_linked_sub_dir').existsSync(), false);
+        expect(
+          targetDirectory
+              .childDirectory('relative_linked_sub_dir')
+              .childFile('another_file.txt')
+              .existsSync(),
+          true,
+        );
+        expect(
+          targetDirectory
+              .childDirectory('relative_linked_sub_dir')
+              .childFile('another_file.txt')
+              .readAsStringSync(),
+          'file 2',
+        );
+        expect(targetDirectory.childDirectory('empty_directory').existsSync(), true);
+
+        // Assert that the copy operation hasn't modified the original file in some way.
+        expect(sourceDirectory.childFile('some_file.txt').lastModifiedSync(), writeTime);
+        // There's still 5 things in the original directory as there were initially.
+        expect(sourceDirectory.listSync().length, 5);
+      } finally {
+        tryToDelete(tempDir);
+      }
+    });
+
+    testWithoutContext('test directory copy with followLinks: false', () async {
+      final Signals signals = Signals.test();
+      final LocalFileSystem fileSystem = LocalFileSystem.test(signals: signals);
+      final Directory tempDir = fileSystem.systemTempDirectory.createTempSync(
+        'flutter_copy_directory.',
+      );
+      try {
+        final String sourcePath = io.Platform.isWindows ? r'some\origin' : 'some/origin';
+        final Directory sourceDirectory = tempDir.childDirectory(sourcePath)
+          ..createSync(recursive: true);
+        final File sourceFile1 = sourceDirectory.childFile('some_file.txt')
+          ..writeAsStringSync('file 1');
+        sourceDirectory.childLink('absolute_linked.txt').createSync(sourceFile1.absolute.path);
+        final DateTime writeTime = sourceFile1.lastModifiedSync();
+        final Directory sourceSubDirectory = sourceDirectory
+          .childDirectory('dir1')
+          .childDirectory('dir2')..createSync(recursive: true);
+        sourceSubDirectory.childFile('another_file.txt').writeAsStringSync('file 2');
+        final String subdirectorySourcePath = io.Platform.isWindows ? r'dir1\dir2' : 'dir1/dir2';
+        sourceDirectory.childLink('relative_linked_sub_dir').createSync(subdirectorySourcePath);
+        sourceDirectory.childDirectory('empty_directory').createSync(recursive: true);
+
+        final String targetPath =
+            io.Platform.isWindows ? r'some\non-existent\target' : 'some/non-existent/target';
+        final Directory targetDirectory = tempDir.childDirectory(targetPath);
+
+        copyDirectory(sourceDirectory, targetDirectory, followLinks: false);
+
+        expect(targetDirectory.existsSync(), true);
+        expect(targetDirectory.childFile('some_file.txt').existsSync(), true);
+        expect(targetDirectory.childFile('some_file.txt').readAsStringSync(), 'file 1');
+        expect(targetDirectory.childFile('absolute_linked.txt').readAsStringSync(), 'file 1');
+        expect(targetDirectory.childLink('absolute_linked.txt').existsSync(), true);
+        expect(
+          targetDirectory.childLink('absolute_linked.txt').targetSync(),
+          sourceFile1.absolute.path,
+        );
+        expect(targetDirectory.childDirectory('dir1').childDirectory('dir2').existsSync(), true);
+        expect(
+          targetDirectory
+              .childDirectory('dir1')
+              .childDirectory('dir2')
+              .childFile('another_file.txt')
+              .existsSync(),
+          true,
+        );
+        expect(
+          targetDirectory
+              .childDirectory('dir1')
+              .childDirectory('dir2')
+              .childFile('another_file.txt')
+              .readAsStringSync(),
+          'file 2',
+        );
+        expect(targetDirectory.childDirectory('relative_linked_sub_dir').existsSync(), true);
+        expect(targetDirectory.childLink('relative_linked_sub_dir').existsSync(), true);
+        expect(
+          targetDirectory.childLink('relative_linked_sub_dir').targetSync(),
+          subdirectorySourcePath,
+        );
+        expect(
+          targetDirectory
+              .childDirectory('relative_linked_sub_dir')
+              .childFile('another_file.txt')
+              .existsSync(),
+          true,
+        );
+        expect(
+          targetDirectory
+              .childDirectory('relative_linked_sub_dir')
+              .childFile('another_file.txt')
+              .readAsStringSync(),
+          'file 2',
+        );
+        expect(targetDirectory.childDirectory('empty_directory').existsSync(), true);
+
+        // Assert that the copy operation hasn't modified the original file in some way.
+        expect(sourceDirectory.childFile('some_file.txt').lastModifiedSync(), writeTime);
+        // There's still 5 things in the original directory as there were initially.
+        expect(sourceDirectory.listSync().length, 5);
+      } finally {
+        tryToDelete(tempDir);
+      }
+    });
+
     testWithoutContext('Skip files if shouldCopyFile returns false', () {
       final MemoryFileSystem fileSystem = MemoryFileSystem.test();
       final Directory origin = fileSystem.directory('/origin');
       origin.createSync();
       fileSystem.file(fileSystem.path.join('origin', 'a.txt')).writeAsStringSync('irrelevant');
       fileSystem.directory('/origin/nested').createSync();
-      fileSystem.file(fileSystem.path.join('origin', 'nested', 'a.txt')).writeAsStringSync('irrelevant');
-      fileSystem.file(fileSystem.path.join('origin', 'nested', 'b.txt')).writeAsStringSync('irrelevant');
+      fileSystem
+          .file(fileSystem.path.join('origin', 'nested', 'a.txt'))
+          .writeAsStringSync('irrelevant');
+      fileSystem
+          .file(fileSystem.path.join('origin', 'nested', 'b.txt'))
+          .writeAsStringSync('irrelevant');
 
       final Directory destination = fileSystem.directory('/destination');
-      copyDirectory(origin, destination, shouldCopyFile: (File origin, File dest) {
-        return origin.basename == 'b.txt';
-      });
+      copyDirectory(
+        origin,
+        destination,
+        shouldCopyFile: (File origin, File dest) {
+          return origin.basename == 'b.txt';
+        },
+      );
 
       expect(destination.existsSync(), isTrue);
       expect(destination.childDirectory('nested').existsSync(), isTrue);
@@ -107,17 +284,25 @@ void main() {
       origin.createSync();
       fileSystem.file(fileSystem.path.join('origin', 'a.txt')).writeAsStringSync('irrelevant');
       fileSystem.directory('/origin/nested').createSync();
-      fileSystem.file(fileSystem.path.join('origin', 'nested', 'a.txt')).writeAsStringSync('irrelevant');
-      fileSystem.file(fileSystem.path.join('origin', 'nested', 'b.txt')).writeAsStringSync('irrelevant');
+      fileSystem
+          .file(fileSystem.path.join('origin', 'nested', 'a.txt'))
+          .writeAsStringSync('irrelevant');
+      fileSystem
+          .file(fileSystem.path.join('origin', 'nested', 'b.txt'))
+          .writeAsStringSync('irrelevant');
 
       final Directory destination = fileSystem.directory('/destination');
-      copyDirectory(origin, destination, shouldCopyDirectory: (Directory directory) {
-        return !directory.path.endsWith('nested');
-      });
+      copyDirectory(
+        origin,
+        destination,
+        shouldCopyDirectory: (Directory directory) {
+          return !directory.path.endsWith('nested');
+        },
+      );
 
       expect(destination, exists);
       expect(destination.childDirectory('nested'), isNot(exists));
-      expect(destination.childDirectory('nested').childFile('b.txt'),isNot(exists));
+      expect(destination.childDirectory('nested').childFile('b.txt'), isNot(exists));
     });
   });
 
@@ -154,6 +339,19 @@ void main() {
       signalUnderTest = ProcessSignal(fakeSignal);
     });
 
+    testWithoutContext('runs shutdown hooks', () async {
+      final Signals signals = Signals.test();
+      final LocalFileSystem localFileSystem = LocalFileSystem.test(signals: signals);
+      final Directory temp = localFileSystem.systemTempDirectory;
+
+      expect(temp.existsSync(), isTrue);
+      expect(localFileSystem.shutdownHooks.registeredHooks, hasLength(1));
+      final BufferLogger logger = BufferLogger.test();
+      await localFileSystem.shutdownHooks.runShutdownHooks(logger);
+      expect(temp.existsSync(), isFalse);
+      expect(logger.traceText, contains('Running 1 shutdown hook'));
+    });
+
     testWithoutContext('deletes system temp entry on a fatal signal', () async {
       final Completer<void> completer = Completer<void>();
       final Signals signals = Signals.test();
@@ -174,6 +372,23 @@ void main() {
 
       expect(temp.existsSync(), isFalse);
     });
+
+    testWithoutContext('throwToolExit when temp not found', () async {
+      final Signals signals = Signals.test();
+      final LocalFileSystemFake localFileSystem = LocalFileSystemFake.test(signals: signals);
+
+      try {
+        localFileSystem.systemTempDirectory;
+        fail('expected tool exit');
+      } on ToolExit catch (e) {
+        expect(
+          e.message,
+          'Your system temp directory (/does_not_exist) does not exist. '
+          'Did you set an invalid override in your environment? '
+          'See issue https://github.com/flutter/flutter/issues/74042 for more context.',
+        );
+      }
+    });
   });
 }
 
@@ -183,4 +398,3 @@ class FakeProcessSignal extends Fake implements io.ProcessSignal {
   @override
   Stream<io.ProcessSignal> watch() => controller.stream;
 }
-class FakeFile extends Fake implements File { }

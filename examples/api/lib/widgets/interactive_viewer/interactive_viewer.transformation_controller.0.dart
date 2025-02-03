@@ -2,38 +2,33 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for InteractiveViewer.transformationController
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [InteractiveViewer.transformationController].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const TransformationControllerExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class TransformationControllerExampleApp extends StatelessWidget {
+  const TransformationControllerExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatefulWidget(),
-    );
+    return const MaterialApp(home: TransformationControllerExample());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class TransformationControllerExample extends StatefulWidget {
+  const TransformationControllerExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<TransformationControllerExample> createState() => _TransformationControllerExampleState();
 }
 
-/// AnimationControllers can be created with `vsync: this` because of TickerProviderStateMixin.
-class _MyStatefulWidgetState extends State<MyStatefulWidget>
+/// [AnimationController]s can be created with `vsync: this` because of
+/// [TickerProviderStateMixin].
+class _TransformationControllerExampleState extends State<TransformationControllerExample>
     with TickerProviderStateMixin {
-  final TransformationController _transformationController =
-      TransformationController();
+  final TransformationController _transformationController = TransformationController();
   Animation<Matrix4>? _animationReset;
   late final AnimationController _controllerReset;
 
@@ -56,7 +51,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
     _controllerReset.forward();
   }
 
-// Stop a running reset to home transform animation.
+  // Stop a running reset to home transform animation.
   void _animateResetStop() {
     _controllerReset.stop();
     _animationReset?.removeListener(_onAnimateReset);
@@ -84,6 +79,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
   @override
   void dispose() {
     _controllerReset.dispose();
+    _transformationController.dispose();
     super.dispose();
   }
 
@@ -91,10 +87,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: const Text('Controller demo'),
-      ),
+      appBar: AppBar(automaticallyImplyLeading: false, title: const Text('Controller demo')),
       body: Center(
         child: InteractiveViewer(
           boundaryMargin: const EdgeInsets.all(double.infinity),

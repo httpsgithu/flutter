@@ -16,7 +16,7 @@ void runMainApp() {
 }
 
 class Flavor extends StatefulWidget {
-  const Flavor({Key? key}) : super(key: key);
+  const Flavor({super.key});
 
   @override
   State<Flavor> createState() => _FlavorState();
@@ -39,9 +39,10 @@ class _FlavorState extends State<Flavor> {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: _flavor == null
-        ? const Text('Awaiting flavor...')
-        : Text(_flavor!, key: const ValueKey<String>('flavor')),
+      child:
+          _flavor == null
+              ? const Text('Awaiting flavor...')
+              : Text(_flavor!, key: const ValueKey<String>('flavor')),
     );
   }
 }

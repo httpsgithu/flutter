@@ -8,31 +8,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'gesture_tester.dart';
 
 // Down/move/up pair 1: normal tap sequence
-const PointerDownEvent down = PointerDownEvent(
-  pointer: 5,
-  position: Offset(10, 10),
-);
+const PointerDownEvent down = PointerDownEvent(pointer: 5, position: Offset(10, 10));
 
-const PointerUpEvent up = PointerUpEvent(
-  pointer: 5,
-  position: Offset(11, 9),
-);
+const PointerUpEvent up = PointerUpEvent(pointer: 5, position: Offset(11, 9));
 
-const PointerMoveEvent move = PointerMoveEvent(
-  pointer: 5,
-  position: Offset(100, 200),
-);
+const PointerMoveEvent move = PointerMoveEvent(pointer: 5, position: Offset(100, 200));
 
 // Down/up pair 2: normal tap sequence far away from pair 1
-const PointerDownEvent down2 = PointerDownEvent(
-  pointer: 6,
-  position: Offset(10, 10),
-);
+const PointerDownEvent down2 = PointerDownEvent(pointer: 6, position: Offset(10, 10));
 
-const PointerUpEvent up2 = PointerUpEvent(
-  pointer: 6,
-  position: Offset(11, 9),
-);
+const PointerUpEvent up2 = PointerUpEvent(pointer: 6, position: Offset(11, 9));
 
 // Down/up pair 3: tap sequence with secondary button
 const PointerDownEvent down3 = PointerDownEvent(
@@ -41,25 +26,8 @@ const PointerDownEvent down3 = PointerDownEvent(
   buttons: kSecondaryButton,
 );
 
-const PointerUpEvent up3 = PointerUpEvent(
-  pointer: 7,
-  position: Offset(31, 29),
-);
-
-// Down/up pair 4: tap sequence with tertiary button
-const PointerDownEvent down4 = PointerDownEvent(
-  pointer: 8,
-  position: Offset(42, 24),
-  buttons: kTertiaryButton,
-);
-
-const PointerUpEvent up4 = PointerUpEvent(
-  pointer: 8,
-  position: Offset(43, 23),
-);
-
 void main() {
-  setUp(ensureGestureBinding);
+  TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Long press', () {
     late LongPressGestureRecognizer gesture;
@@ -233,13 +201,17 @@ void main() {
       expect(recognized, const <String>['down', 'start', 'end']);
     });
 
-    testGesture('Should not recognize long press with more than one buttons', (GestureTester tester) {
-      gesture.addPointer(const PointerDownEvent(
-        pointer: 5,
-        kind: PointerDeviceKind.mouse,
-        buttons: kSecondaryMouseButton | kTertiaryButton,
-        position: Offset(10, 10),
-      ));
+    testGesture('Should not recognize long press with more than one buttons', (
+      GestureTester tester,
+    ) {
+      gesture.addPointer(
+        const PointerDownEvent(
+          pointer: 5,
+          kind: PointerDeviceKind.mouse,
+          buttons: kSecondaryMouseButton | kTertiaryButton,
+          position: Offset(10, 10),
+        ),
+      );
       tester.closeArena(5);
       expect(recognized, const <String>[]);
       tester.route(down);
@@ -252,7 +224,9 @@ void main() {
       expect(recognized, const <String>[]);
     });
 
-    testGesture('Should cancel long press when buttons change before acceptance', (GestureTester tester) {
+    testGesture('Should cancel long press when buttons change before acceptance', (
+      GestureTester tester,
+    ) {
       gesture.addPointer(down);
       tester.closeArena(5);
       expect(recognized, const <String>[]);
@@ -260,12 +234,14 @@ void main() {
       expect(recognized, const <String>['down']);
       tester.async.elapse(const Duration(milliseconds: 300));
       expect(recognized, const <String>['down']);
-      tester.route(const PointerMoveEvent(
-        pointer: 5,
-        kind: PointerDeviceKind.mouse,
-        buttons: kTertiaryButton,
-        position: Offset(10, 10),
-      ));
+      tester.route(
+        const PointerMoveEvent(
+          pointer: 5,
+          kind: PointerDeviceKind.mouse,
+          buttons: kTertiaryButton,
+          position: Offset(10, 10),
+        ),
+      );
       expect(recognized, const <String>['down', 'cancel']);
       tester.async.elapse(const Duration(milliseconds: 700));
       expect(recognized, const <String>['down', 'cancel']);
@@ -275,8 +251,12 @@ void main() {
       expect(recognized, const <String>['down', 'cancel']);
     });
 
-    testGesture('non-allowed pointer does not inadvertently reset the recognizer', (GestureTester tester) {
-      gesture = LongPressGestureRecognizer(kind: PointerDeviceKind.touch);
+    testGesture('non-allowed pointer does not inadvertently reset the recognizer', (
+      GestureTester tester,
+    ) {
+      gesture = LongPressGestureRecognizer(
+        supportedDevices: <PointerDeviceKind>{PointerDeviceKind.touch},
+      );
       setUpHandlers();
 
       // Accept a long-press gesture
@@ -287,18 +267,17 @@ void main() {
       expect(recognized, const <String>['down', 'start']);
 
       // Add a non-allowed pointer (doesn't match the kind filter)
-      gesture.addPointer(const PointerDownEvent(
-        pointer: 101,
-        kind: PointerDeviceKind.mouse,
-        position: Offset(10, 10),
-      ));
+      gesture.addPointer(
+        const PointerDownEvent(
+          pointer: 101,
+          kind: PointerDeviceKind.mouse,
+          position: Offset(10, 10),
+        ),
+      );
       expect(recognized, const <String>['down', 'start']);
 
       // Moving the primary pointer should result in a normal event
-      tester.route(const PointerMoveEvent(
-        pointer: 5,
-        position: Offset(15, 15),
-      ));
+      tester.route(const PointerMoveEvent(pointer: 5, position: Offset(15, 15)));
       expect(recognized, const <String>['down', 'start', 'move']);
       gesture.dispose();
     });
@@ -414,19 +393,20 @@ void main() {
     final List<String> recognized = <String>[];
 
     setUp(() {
-      gesture = LongPressGestureRecognizer()
-        ..onLongPressDown = (LongPressDownDetails details) {
-          recognized.add('down');
-        }
-        ..onLongPressCancel = () {
-          recognized.add('cancel');
-        }
-        ..onLongPressStart = (LongPressStartDetails details) {
-          recognized.add('start');
-        }
-        ..onLongPressEnd = (LongPressEndDetails details) {
-          recognized.add('end');
-        };
+      gesture =
+          LongPressGestureRecognizer()
+            ..onLongPressDown = (LongPressDownDetails details) {
+              recognized.add('down');
+            }
+            ..onLongPressCancel = () {
+              recognized.add('cancel');
+            }
+            ..onLongPressStart = (LongPressStartDetails details) {
+              recognized.add('start');
+            }
+            ..onLongPressEnd = (LongPressEndDetails details) {
+              recognized.add('end');
+            };
     });
 
     tearDown(() {
@@ -434,7 +414,9 @@ void main() {
       recognized.clear();
     });
 
-    testGesture('Should cancel long press when buttons change before acceptance', (GestureTester tester) {
+    testGesture('Should cancel long press when buttons change before acceptance', (
+      GestureTester tester,
+    ) {
       // First press
       gesture.addPointer(down);
       tester.closeArena(down.pointer);
@@ -447,7 +429,9 @@ void main() {
       expect(recognized, const <String>['down', 'cancel']);
     });
 
-    testGesture('Buttons change before acceptance should not prevent the next long press', (GestureTester tester) {
+    testGesture('Buttons change before acceptance should not prevent the next long press', (
+      GestureTester tester,
+    ) {
       // First press
       gesture.addPointer(down);
       tester.closeArena(down.pointer);
@@ -473,7 +457,9 @@ void main() {
       expect(recognized, <String>['end']);
     });
 
-    testGesture('Should cancel long press when buttons change after acceptance', (GestureTester tester) {
+    testGesture('Should not cancel long press when buttons change after acceptance', (
+      GestureTester tester,
+    ) {
       // First press
       gesture.addPointer(down);
       tester.closeArena(down.pointer);
@@ -485,10 +471,12 @@ void main() {
       tester.route(moveR);
       expect(recognized, <String>[]);
       tester.route(up);
-      expect(recognized, <String>[]);
+      expect(recognized, <String>['end']);
     });
 
-    testGesture('Buttons change after acceptance should not prevent the next long press', (GestureTester tester) {
+    testGesture('Buttons change after acceptance should not prevent the next long press', (
+      GestureTester tester,
+    ) {
       // First press
       gesture.addPointer(down);
       tester.closeArena(down.pointer);
@@ -512,7 +500,9 @@ void main() {
   });
 
   testGesture('Can filter long press based on device kind', (GestureTester tester) {
-    final LongPressGestureRecognizer mouseLongPress = LongPressGestureRecognizer(kind: PointerDeviceKind.mouse);
+    final LongPressGestureRecognizer mouseLongPress = LongPressGestureRecognizer(
+      supportedDevices: <PointerDeviceKind>{PointerDeviceKind.mouse},
+    );
 
     bool mouseLongPressDown = false;
     mouseLongPress.onLongPress = () {
@@ -524,10 +514,7 @@ void main() {
       position: Offset(10, 10),
       kind: PointerDeviceKind.mouse,
     );
-    const PointerDownEvent touchDown = PointerDownEvent(
-      pointer: 5,
-      position: Offset(10, 10),
-    );
+    const PointerDownEvent touchDown = PointerDownEvent(pointer: 5, position: Offset(10, 10));
 
     // Touch events shouldn't be recognized.
     mouseLongPress.addPointer(touchDown);
@@ -563,18 +550,21 @@ void main() {
     late TapGestureRecognizer tapSecondary;
     late LongPressGestureRecognizer longPress;
     setUp(() {
-      tapPrimary = TapGestureRecognizer()
-        ..onTapDown = (TapDownDetails details) {
-          recognized.add('tapPrimary');
-        };
-      tapSecondary = TapGestureRecognizer()
-        ..onSecondaryTapDown = (TapDownDetails details) {
-          recognized.add('tapSecondary');
-        };
-      longPress = LongPressGestureRecognizer()
-        ..onLongPressStart = (_) {
-          recognized.add('longPress');
-        };
+      tapPrimary =
+          TapGestureRecognizer()
+            ..onTapDown = (TapDownDetails details) {
+              recognized.add('tapPrimary');
+            };
+      tapSecondary =
+          TapGestureRecognizer()
+            ..onSecondaryTapDown = (TapDownDetails details) {
+              recognized.add('tapSecondary');
+            };
+      longPress =
+          LongPressGestureRecognizer()
+            ..onLongPressStart = (_) {
+              recognized.add('longPress');
+            };
     });
 
     tearDown(() {
@@ -584,16 +574,21 @@ void main() {
       longPress.dispose();
     });
 
-    testGesture('A primary long press recognizer does not form competition with a secondary tap recognizer', (GestureTester tester) {
-      longPress.addPointer(down3);
-      tapSecondary.addPointer(down3);
-      tester.closeArena(down3.pointer);
+    testGesture(
+      'A primary long press recognizer does not form competition with a secondary tap recognizer',
+      (GestureTester tester) {
+        longPress.addPointer(down3);
+        tapSecondary.addPointer(down3);
+        tester.closeArena(down3.pointer);
 
-      tester.route(down3);
-      expect(recognized, <String>['tapSecondary']);
-    });
+        tester.route(down3);
+        expect(recognized, <String>['tapSecondary']);
+      },
+    );
 
-    testGesture('A primary long press recognizer forms competition with a primary tap recognizer', (GestureTester tester) {
+    testGesture('A primary long press recognizer forms competition with a primary tap recognizer', (
+      GestureTester tester,
+    ) {
       longPress.addPointer(down);
       tapPrimary.addPointer(down);
       tester.closeArena(down.pointer);
@@ -608,22 +603,23 @@ void main() {
 
   testGesture('A secondary long press should not trigger primary', (GestureTester tester) {
     final List<String> recognized = <String>[];
-    final LongPressGestureRecognizer longPress = LongPressGestureRecognizer()
-      ..onLongPressStart = (LongPressStartDetails details) {
-        recognized.add('primaryStart');
-      }
-      ..onLongPress = () {
-        recognized.add('primary');
-      }
-      ..onLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
-        recognized.add('primaryUpdate');
-      }
-      ..onLongPressEnd = (LongPressEndDetails details) {
-        recognized.add('primaryEnd');
-      }
-      ..onLongPressUp = () {
-        recognized.add('primaryUp');
-      };
+    final LongPressGestureRecognizer longPress =
+        LongPressGestureRecognizer()
+          ..onLongPressStart = (LongPressStartDetails details) {
+            recognized.add('primaryStart');
+          }
+          ..onLongPress = () {
+            recognized.add('primary');
+          }
+          ..onLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
+            recognized.add('primaryUpdate');
+          }
+          ..onLongPressEnd = (LongPressEndDetails details) {
+            recognized.add('primaryEnd');
+          }
+          ..onLongPressUp = () {
+            recognized.add('primaryUp');
+          };
 
     const PointerDownEvent down2 = PointerDownEvent(
       pointer: 2,
@@ -637,10 +633,7 @@ void main() {
       position: Offset(100, 200),
     );
 
-    const PointerUpEvent up2 = PointerUpEvent(
-      pointer: 2,
-      position: Offset(100, 201),
-    );
+    const PointerUpEvent up2 = PointerUpEvent(pointer: 2, position: Offset(100, 201));
 
     longPress.addPointer(down2);
     tester.closeArena(2);
@@ -653,39 +646,42 @@ void main() {
     recognized.clear();
   });
 
-  testGesture('A tertiary long press should not trigger primary or secondary', (GestureTester tester) {
+  testGesture('A tertiary long press should not trigger primary or secondary', (
+    GestureTester tester,
+  ) {
     final List<String> recognized = <String>[];
-    final LongPressGestureRecognizer longPress = LongPressGestureRecognizer()
-      ..onLongPressStart = (LongPressStartDetails details) {
-        recognized.add('primaryStart');
-      }
-      ..onLongPress = () {
-        recognized.add('primary');
-      }
-      ..onLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
-        recognized.add('primaryUpdate');
-      }
-      ..onLongPressEnd = (LongPressEndDetails details) {
-        recognized.add('primaryEnd');
-      }
-      ..onLongPressUp = () {
-        recognized.add('primaryUp');
-      }
-      ..onSecondaryLongPressStart = (LongPressStartDetails details) {
-        recognized.add('secondaryStart');
-      }
-      ..onSecondaryLongPress = () {
-        recognized.add('secondary');
-      }
-      ..onSecondaryLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
-        recognized.add('secondaryUpdate');
-      }
-      ..onSecondaryLongPressEnd = (LongPressEndDetails details) {
-        recognized.add('secondaryEnd');
-      }
-      ..onSecondaryLongPressUp = () {
-        recognized.add('secondaryUp');
-      };
+    final LongPressGestureRecognizer longPress =
+        LongPressGestureRecognizer()
+          ..onLongPressStart = (LongPressStartDetails details) {
+            recognized.add('primaryStart');
+          }
+          ..onLongPress = () {
+            recognized.add('primary');
+          }
+          ..onLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
+            recognized.add('primaryUpdate');
+          }
+          ..onLongPressEnd = (LongPressEndDetails details) {
+            recognized.add('primaryEnd');
+          }
+          ..onLongPressUp = () {
+            recognized.add('primaryUp');
+          }
+          ..onSecondaryLongPressStart = (LongPressStartDetails details) {
+            recognized.add('secondaryStart');
+          }
+          ..onSecondaryLongPress = () {
+            recognized.add('secondary');
+          }
+          ..onSecondaryLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
+            recognized.add('secondaryUpdate');
+          }
+          ..onSecondaryLongPressEnd = (LongPressEndDetails details) {
+            recognized.add('secondaryEnd');
+          }
+          ..onSecondaryLongPressUp = () {
+            recognized.add('secondaryUp');
+          };
 
     const PointerDownEvent down2 = PointerDownEvent(
       pointer: 2,
@@ -699,10 +695,7 @@ void main() {
       position: Offset(100, 200),
     );
 
-    const PointerUpEvent up2 = PointerUpEvent(
-      pointer: 2,
-      position: Offset(100, 201),
-    );
+    const PointerUpEvent up2 = PointerUpEvent(pointer: 2, position: Offset(100, 201));
 
     longPress.addPointer(down2);
     tester.closeArena(2);
@@ -715,18 +708,103 @@ void main() {
     recognized.clear();
   });
 
-  testWidgets('LongPressGestureRecognizer asserts when kind and supportedDevices are both set', (WidgetTester tester) async {
-    expect(
-      () {
-        LongPressGestureRecognizer(
-          kind: PointerDeviceKind.touch,
-          supportedDevices: <PointerDeviceKind>{ PointerDeviceKind.touch },
-        );
-      },
-      throwsA(
-        isA<AssertionError>().having((AssertionError error) => error.toString(),
-        'description', contains('kind == null || supportedDevices == null')),
-      ),
+  testGesture('Switching buttons mid-stream does not fail to send "end" event', (
+    GestureTester tester,
+  ) {
+    final List<String> recognized = <String>[];
+    final LongPressGestureRecognizer longPress =
+        LongPressGestureRecognizer()
+          ..onLongPressStart = (LongPressStartDetails details) {
+            recognized.add('primaryStart');
+          }
+          ..onLongPressEnd = (LongPressEndDetails details) {
+            recognized.add('primaryEnd');
+          };
+
+    const PointerDownEvent down4 = PointerDownEvent(pointer: 8, position: Offset(10, 10));
+
+    const PointerMoveEvent move4 = PointerMoveEvent(
+      pointer: 8,
+      position: Offset(100, 200),
+      buttons: kPrimaryButton | kSecondaryButton,
     );
+
+    const PointerUpEvent up4 = PointerUpEvent(
+      pointer: 8,
+      position: Offset(100, 200),
+      buttons: kSecondaryButton,
+    );
+
+    longPress.addPointer(down4);
+    tester.closeArena(4);
+    tester.route(down4);
+    tester.async.elapse(const Duration(milliseconds: 1000));
+    recognized.add('two seconds later...');
+    tester.route(move4);
+    tester.async.elapse(const Duration(milliseconds: 1000));
+    recognized.add('two more seconds later...');
+    tester.route(up4);
+    tester.async.elapse(const Duration(milliseconds: 1000));
+    expect(recognized, <String>[
+      'primaryStart',
+      'two seconds later...',
+      'two more seconds later...',
+      'primaryEnd',
+    ]);
+    longPress.dispose();
   });
+
+  testGesture(
+    'Switching buttons mid-stream does not fail to send "end" event (alternative sequence)',
+    (GestureTester tester) {
+      // This reproduces sequences seen on macOS.
+      final List<String> recognized = <String>[];
+      final LongPressGestureRecognizer longPress =
+          LongPressGestureRecognizer()
+            ..onLongPressStart = (LongPressStartDetails details) {
+              recognized.add('primaryStart');
+            }
+            ..onLongPressEnd = (LongPressEndDetails details) {
+              recognized.add('primaryEnd');
+            };
+
+      const PointerDownEvent down5 = PointerDownEvent(pointer: 9, position: Offset(10, 10));
+
+      const PointerMoveEvent move5a = PointerMoveEvent(
+        pointer: 9,
+        position: Offset(100, 200),
+        buttons: 3, // add 2
+      );
+
+      const PointerMoveEvent move5b = PointerMoveEvent(
+        pointer: 9,
+        position: Offset(100, 200),
+        buttons: 2, // remove 1
+      );
+
+      const PointerUpEvent up5 = PointerUpEvent(pointer: 9, position: Offset(100, 200));
+
+      longPress.addPointer(down5);
+      tester.closeArena(4);
+      tester.route(down5);
+      tester.async.elapse(const Duration(milliseconds: 1000));
+      recognized.add('two seconds later...');
+      tester.route(move5a);
+      tester.async.elapse(const Duration(milliseconds: 1000));
+      recognized.add('two more seconds later...');
+      tester.route(move5b);
+      tester.async.elapse(const Duration(milliseconds: 1000));
+      recognized.add('two more seconds later still...');
+      tester.route(up5);
+      tester.async.elapse(const Duration(milliseconds: 1000));
+      expect(recognized, <String>[
+        'primaryStart',
+        'two seconds later...',
+        'two more seconds later...',
+        'two more seconds later still...',
+        'primaryEnd',
+      ]);
+      longPress.dispose();
+    },
+  );
 }

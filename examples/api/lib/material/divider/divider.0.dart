@@ -2,52 +2,38 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for Divider
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [Divider].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const DividerExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class DividerExampleApp extends StatelessWidget {
+  const DividerExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: _title,
       home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: const MyStatelessWidget(),
+        appBar: AppBar(title: const Text('Divider Sample')),
+        body: const DividerExample(),
       ),
     );
   }
 }
 
-class MyStatelessWidget extends StatelessWidget {
-  const MyStatelessWidget({Key? key}) : super(key: key);
+class DividerExample extends StatelessWidget {
+  const DividerExample({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         children: <Widget>[
-          Expanded(
-            child: Container(
-              color: Colors.amber,
-              child: const Center(
-                child: Text('Above'),
-              ),
-            ),
+          const Expanded(
+            child: ColoredBox(color: Colors.amber, child: Center(child: Text('Above'))),
           ),
-          const Divider(
-            height: 20,
-            thickness: 5,
-            indent: 20,
-            endIndent: 0,
-            color: Colors.black,
-          ),
+          const Divider(height: 20, thickness: 5, indent: 20, endIndent: 0, color: Colors.black),
           // Subheader example from Material spec.
           // https://material.io/components/dividers#types
           Container(
@@ -56,17 +42,15 @@ class MyStatelessWidget extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: Text(
                 'Subheader',
-                style: Theme.of(context).textTheme.caption,
+                style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.start,
               ),
             ),
           ),
           Expanded(
-            child: Container(
+            child: ColoredBox(
               color: Theme.of(context).colorScheme.primary,
-              child: const Center(
-                child: Text('Below'),
-              ),
+              child: const Center(child: Text('Below')),
             ),
           ),
         ],

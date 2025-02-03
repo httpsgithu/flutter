@@ -2,38 +2,36 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for CupertinoSliverRefreshControl
-
 import 'package:flutter/cupertino.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [CupertinoSliverRefreshControl].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const RefreshControlApp());
 
-  static const String _title = 'Flutter Code Sample';
+class RefreshControlApp extends StatelessWidget {
+  const RefreshControlApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const CupertinoApp(
-      title: _title,
-      home: MyStatefulWidget(),
+      theme: CupertinoThemeData(brightness: Brightness.light),
+      home: RefreshControlExample(),
     );
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class RefreshControlExample extends StatefulWidget {
+  const RefreshControlExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<RefreshControlExample> createState() => _RefreshControlExampleState();
 }
 
-class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+class _RefreshControlExampleState extends State<RefreshControlExample> {
   List<Color> colors = <Color>[
     CupertinoColors.systemYellow,
     CupertinoColors.systemOrange,
-    CupertinoColors.systemPink
+    CupertinoColors.systemPink,
   ];
   List<Widget> items = <Widget>[
     Container(color: CupertinoColors.systemPink, height: 100.0),
@@ -44,24 +42,18 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
+      navigationBar: const CupertinoNavigationBar(
+        middle: Text('CupertinoSliverRefreshControl Sample'),
+      ),
       child: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
         slivers: <Widget>[
-          const CupertinoSliverNavigationBar(
-            largeTitle: Text('Scroll down'),
-          ),
+          const CupertinoSliverNavigationBar(largeTitle: Text('Scroll down')),
           CupertinoSliverRefreshControl(
             onRefresh: () async {
-              await Future<void>.delayed(
-                const Duration(milliseconds: 1000),
-              );
+              await Future<void>.delayed(const Duration(milliseconds: 1000));
               setState(() {
-                items.insert(
-                  0,
-                  Container(color: colors[items.length % 3], height: 100.0),
-                );
+                items.insert(0, Container(color: colors[items.length % 3], height: 100.0));
               });
             },
           ),

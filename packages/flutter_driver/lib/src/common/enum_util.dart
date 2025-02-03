@@ -12,20 +12,14 @@
 /// Example:
 ///
 ///     enum Vote { yea, nay }
-///     final index = new EnumIndex(Vote.values);
+///     final index = EnumIndex(Vote.values);
 ///     index.lookupBySimpleName('yea'); // returns Vote.yea
 ///     index.toSimpleName(Vote.nay); // returns 'nay'
 class EnumIndex<E> {
   /// Creates an index of [enumValues].
   EnumIndex(List<E> enumValues)
-    : _nameToValue = Map<String, E>.fromIterable(
-        enumValues,
-        key: _getSimpleName,
-      ),
-      _valueToName = Map<E, String>.fromIterable(
-        enumValues,
-        value: _getSimpleName,
-      );
+    : _nameToValue = Map<String, E>.fromIterable(enumValues, key: _getSimpleName),
+      _valueToName = Map<E, String>.fromIterable(enumValues, value: _getSimpleName);
 
   final Map<String, E> _nameToValue;
   final Map<E, String> _valueToName;

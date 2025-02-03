@@ -6,13 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:leak_tracker_flutter_testing/leak_tracker_flutter_testing.dart';
 
 void main() {
   Future<void> setAppLifeCycleState(AppLifecycleState state) async {
-    final ByteData? message =
-        const StringCodec().encodeMessage(state.toString());
-    await ServicesBinding.instance!.defaultBinaryMessenger
-        .handlePlatformMessage('flutter/lifecycle', message, (_) {});
+    final ByteData? message = const StringCodec().encodeMessage(state.toString());
+    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.handlePlatformMessage(
+      'flutter/lifecycle',
+      message,
+      (_) {},
+    );
   }
 
   testWidgets('Ticker mute control test', (WidgetTester tester) async {
@@ -22,6 +25,7 @@ void main() {
     }
 
     final Ticker ticker = Ticker(handleTick);
+    addTearDown(ticker.dispose);
 
     expect(ticker.isTicking, isFalse);
     expect(ticker.isActive, isFalse);
@@ -99,9 +103,10 @@ void main() {
 
   testWidgets('Ticker control test', (WidgetTester tester) async {
     late Ticker ticker;
+    addTearDown(() => ticker.dispose());
 
     void testFunction() {
-      ticker = Ticker((Duration _) { });
+      ticker = Ticker((Duration _) {});
     }
 
     testFunction();
@@ -124,6 +129,8 @@ void main() {
     expect(lastDuration, const Duration(milliseconds: 20));
 
     ticker.dispose();
+
+    timeDilation = 1.0; // restore time dilation, or it will affect other tests
   });
 
   testWidgets('Ticker can be slowed down with time dilation', (WidgetTester tester) async {
@@ -140,6 +147,8 @@ void main() {
     expect(lastDuration, const Duration(milliseconds: 5));
 
     ticker.dispose();
+
+    timeDilation = 1.0; // restore time dilation, or it will affect other tests
   });
 
   testWidgets('Ticker stops ticking when application is paused', (WidgetTester tester) async {
@@ -149,6 +158,7 @@ void main() {
     }
 
     final Ticker ticker = Ticker(handleTick);
+    addTearDown(ticker.dispose);
     ticker.start();
 
     expect(ticker.isTicking, isTrue);
@@ -174,6 +184,7 @@ void main() {
     }
 
     final Ticker ticker = Ticker(handleTick);
+    addTearDown(ticker.dispose);
     ticker.start();
 
     expect(tickCount, equals(0));
@@ -192,5 +203,12 @@ void main() {
     expect(ticker.isTicking, isTrue);
 
     ticker.stop();
+  });
+
+  test('Ticker dispatches memory events', () async {
+    await expectLater(
+      await memoryEvents(() => Ticker((_) {}).dispose(), Ticker),
+      areCreateAndDispose,
+    );
   });
 }

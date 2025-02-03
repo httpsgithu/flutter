@@ -6,7 +6,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_devicelab/common.dart';
 import 'package:flutter_devicelab/framework/devices.dart';
 import 'package:flutter_devicelab/framework/framework.dart';
 import 'package:flutter_devicelab/framework/task_result.dart';
@@ -26,14 +25,21 @@ void main() {
       final Completer<void> ready = Completer<void>();
       late bool ok;
       print('run: starting...');
-      final Process run = await startProcess(
-        path.join(flutterDirectory.path, 'bin', 'flutter'),
-        <String>['run', '--verbose', '--no-fast-start', '--no-publish-port', '--disable-service-auth-codes', '-d', device.deviceId, 'lib/main.dart'],
+      final Process run = await startFlutter(
+        'run',
+        options: <String>[
+          '--verbose',
+          '--no-fast-start',
+          '--no-publish-port',
+          '--disable-service-auth-codes',
+          '-d',
+          device.deviceId,
+          'lib/main.dart',
+        ],
       );
-      run.stdout
-          .transform<String>(utf8.decoder)
-          .transform<String>(const LineSplitter())
-          .listen((String line) {
+      run.stdout.transform<String>(utf8.decoder).transform<String>(const LineSplitter()).listen((
+        String line,
+      ) {
         print('run:stdout: $line');
         if (vmServicePort == null) {
           vmServicePort = parseServicePort(line);
@@ -45,16 +51,20 @@ void main() {
           }
         }
       });
-      run.stderr
-          .transform<String>(utf8.decoder)
-          .transform<String>(const LineSplitter())
-          .listen((String line) {
+      run.stderr.transform<String>(utf8.decoder).transform<String>(const LineSplitter()).listen((
+        String line,
+      ) {
         stderr.writeln('run:stderr: $line');
       });
-      unawaited(run.exitCode.then<void>((int exitCode) { ok = false; }));
-      await Future.any<dynamic>(<Future<dynamic>>[ ready.future, run.exitCode ]);
-      if (!ok)
+      unawaited(
+        run.exitCode.then<void>((int exitCode) {
+          ok = false;
+        }),
+      );
+      await Future.any<dynamic>(<Future<dynamic>>[ready.future, run.exitCode]);
+      if (!ok) {
         throw 'Failed to run test app.';
+      }
 
       final VmService client = await vmServiceConnectUri('ws://localhost:$vmServicePort/ws');
       final VM vm = await client.getVM();
@@ -107,7 +117,8 @@ void main() {
       final Event navigationEvent = await navigationFuture;
       // validate the fields
       expect(navigationEvent.extensionData!.data['route'] is Map<dynamic, dynamic>);
-      final Map<dynamic, dynamic> route = navigationEvent.extensionData!.data['route'] as Map<dynamic, dynamic>;
+      final Map<dynamic, dynamic> route =
+          navigationEvent.extensionData!.data['route'] as Map<dynamic, dynamic>;
       expect(route['description'] is String);
       expect(route['settings'] is Map<dynamic, dynamic>);
       final Map<dynamic, dynamic> settings = route['settings'] as Map<dynamic, dynamic>;
@@ -115,14 +126,16 @@ void main() {
 
       run.stdin.write('q');
       final int result = await run.exitCode;
-      if (result != 0)
+      if (result != 0) {
         throw 'Received unexpected exit code $result from run process.';
+      }
     });
     return TaskResult.success(null);
   });
 }
 
 void expect(bool value) {
-  if (!value)
+  if (!value) {
     throw 'failed assertion in service extensions test';
+  }
 }

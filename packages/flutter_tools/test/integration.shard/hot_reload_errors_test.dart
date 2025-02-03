@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// @dart = 2.8
+@Tags(<String>['flutter-test-driver'])
+library;
 
 import 'package:file/file.dart';
 
@@ -12,9 +13,9 @@ import 'test_driver.dart';
 import 'test_utils.dart';
 
 void main() {
-  Directory tempDir;
+  late Directory tempDir;
   final HotReloadConstProject project = HotReloadConstProject();
-  FlutterRunTestDriver flutter;
+  late FlutterRunTestDriver flutter;
 
   setUp(() async {
     tempDir = createResolvedTempDirectorySync('hot_reload_test.');
@@ -23,14 +24,26 @@ void main() {
   });
 
   tearDown(() async {
-    await flutter?.stop();
+    await flutter.stop();
     tryToDelete(tempDir);
   });
 
-  testWithoutContext('hot reload displays a formatted error message when removing a field from a const class', () async {
-    await flutter.run();
-    project.removeFieldFromConstClass();
+  testWithoutContext(
+    'hot reload displays a formatted error message when removing a field from a const class',
+    () async {
+      await flutter.run();
+      project.removeFieldFromConstClass();
 
-    expect(flutter.hotReload(), throwsA(contains('Try performing a hot restart instead.')));
-  });
+      expect(
+        flutter.hotReload(),
+        throwsA(
+          isA<Exception>().having(
+            (Exception e) => e.toString(),
+            'message',
+            contains('Try performing a hot restart instead.'),
+          ),
+        ),
+      );
+    },
+  );
 }

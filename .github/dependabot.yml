@@ -3,15 +3,20 @@
 
 version: 2
 updates:
-  - package-ecosystem: "bundler"
-    directory: "/dev/ci/mac"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      all-github-actions:
+        patterns: [ "*" ]
     reviewers:
+      - "christopherfujino"
       - "jmagman"
-      - "keyonghan"
-      - "yusufm"
     labels:
       - "team"
-      - "team: infra"
-      - "waiting for tree to go green"
+      - "team-infra"
+      - "autosubmit"
+    ignore:
+      - dependency-name: "codecov/codecov-action"
+        update-types: ["version-update:semver-patch"]

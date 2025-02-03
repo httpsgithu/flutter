@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'package:flutter/material.dart';
+library;
+
 import 'package:flutter/rendering.dart';
 
 import 'basic.dart';
@@ -18,18 +21,12 @@ import 'image.dart';
 ///  * [IconButton], for interactive icons.
 ///  * [IconTheme], which provides ambient configuration for icons.
 ///  * [Icon], for icons based on glyphs from fonts instead of images.
-///  * [Icons], a predefined font based set of icons from the material design library.
+///  * [Icons], the library of Material Icons.
 class ImageIcon extends StatelessWidget {
   /// Creates an image icon.
   ///
   /// The [size] and [color] default to the value given by the current [IconTheme].
-  const ImageIcon(
-    this.image, {
-    Key? key,
-    this.size,
-    this.color,
-    this.semanticLabel,
-  }) : super(key: key);
+  const ImageIcon(this.image, {super.key, this.size, this.color, this.semanticLabel});
 
   /// The image to display as the icon.
   ///
@@ -57,7 +54,7 @@ class ImageIcon extends StatelessWidget {
 
   /// Semantic label for the icon.
   ///
-  /// Announced in accessibility modes (e.g TalkBack/VoiceOver).
+  /// Announced by assistive technologies (e.g TalkBack/VoiceOver).
   /// This label does not show in the UI.
   ///
   ///  * [SemanticsProperties.label], which is set to [semanticLabel] in the
@@ -69,17 +66,16 @@ class ImageIcon extends StatelessWidget {
     final IconThemeData iconTheme = IconTheme.of(context);
     final double? iconSize = size ?? iconTheme.size;
 
-    if (image == null)
-      return Semantics(
-        label: semanticLabel,
-        child: SizedBox(width: iconSize, height: iconSize),
-      );
+    if (image == null) {
+      return Semantics(label: semanticLabel, child: SizedBox(width: iconSize, height: iconSize));
+    }
 
     final double? iconOpacity = iconTheme.opacity;
     Color iconColor = color ?? iconTheme.color!;
 
-    if (iconOpacity != null && iconOpacity != 1.0)
+    if (iconOpacity != null && iconOpacity != 1.0) {
       iconColor = iconColor.withOpacity(iconColor.opacity * iconOpacity);
+    }
 
     return Semantics(
       label: semanticLabel,
@@ -97,7 +93,9 @@ class ImageIcon extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<ImageProvider>('image', image, ifNull: '<empty>', showName: false));
+    properties.add(
+      DiagnosticsProperty<ImageProvider>('image', image, ifNull: '<empty>', showName: false),
+    );
     properties.add(DoubleProperty('size', size, defaultValue: null));
     properties.add(ColorProperty('color', color, defaultValue: null));
   }

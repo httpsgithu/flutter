@@ -2,9 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui' show hashValues;
+/// @docImport 'package:flutter/semantics.dart';
+/// @docImport 'package:flutter/widgets.dart';
+library;
 
 import 'package:meta/meta.dart';
+
+import 'diagnostics.dart';
 
 /// A [Key] is an identifier for [Widget]s, [Element]s and [SemanticsNode]s.
 ///
@@ -21,6 +25,7 @@ import 'package:meta/meta.dart';
 ///
 ///  * [Widget.key], which discusses how widgets use keys.
 @immutable
+@pragma('flutter:keep-to-string-in-subtypes')
 abstract class Key {
   /// Construct a [ValueKey<String>] with the given [String].
   ///
@@ -29,7 +34,7 @@ abstract class Key {
 
   /// Default constructor, used by subclasses.
   ///
-  /// Useful so that subclasses can call us, because the [new Key] factory
+  /// Useful so that subclasses can call us, because the [Key.new] factory
   /// constructor shadows the implicit constructor.
   @protected
   const Key.empty();
@@ -47,6 +52,23 @@ abstract class LocalKey extends Key {
   /// Abstract const constructor. This constructor enables subclasses to provide
   /// const constructors so that they can be used in const expressions.
   const LocalKey() : super.empty();
+}
+
+/// A key that is only equal to itself.
+///
+/// This cannot be created with a const constructor because that implies that
+/// all instantiated keys would be the same instance and therefore not be unique.
+class UniqueKey extends LocalKey {
+  /// Creates a key that is equal only to itself.
+  ///
+  /// The key cannot be created with a const constructor because that implies
+  /// that all instantiated keys would be the same instance and therefore not
+  /// be unique.
+  // ignore: prefer_const_constructors_in_immutables , never use const for this class
+  UniqueKey();
+
+  @override
+  String toString() => '[#${shortHash(this)}]';
 }
 
 /// A key that uses a value of a particular type to identify itself.
@@ -72,22 +94,23 @@ class ValueKey<T> extends LocalKey {
 
   @override
   bool operator ==(Object other) {
-    if (other.runtimeType != runtimeType)
+    if (other.runtimeType != runtimeType) {
       return false;
-    return other is ValueKey<T>
-        && other.value == value;
+    }
+    return other is ValueKey<T> && other.value == value;
   }
 
   @override
-  int get hashCode => hashValues(runtimeType, value);
+  int get hashCode => Object.hash(runtimeType, value);
 
   @override
   String toString() {
     final String valueString = T == String ? "<'$value'>" : '<$value>';
     // The crazy on the next line is a workaround for
     // https://github.com/dart-lang/sdk/issues/33297
-    if (runtimeType == _TypeLiteral<ValueKey<T>>().type)
+    if (runtimeType == _TypeLiteral<ValueKey<T>>().type) {
       return '[$valueString]';
+    }
     return '[$T $valueString]';
   }
 }

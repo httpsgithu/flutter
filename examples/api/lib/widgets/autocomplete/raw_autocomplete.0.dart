@@ -2,39 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for RawAutocomplete
-
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+
+/// Flutter code sample for [RawAutocomplete].
 
 void main() => runApp(const AutocompleteExampleApp());
 
 class AutocompleteExampleApp extends StatelessWidget {
-  const AutocompleteExampleApp({Key? key}) : super(key: key);
+  const AutocompleteExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('RawAutocomplete Basic'),
-        ),
-        body: const Center(
-          child: AutocompleteBasicExample(),
-        ),
+        appBar: AppBar(title: const Text('RawAutocomplete Basic')),
+        body: const Center(child: AutocompleteBasicExample()),
       ),
     );
   }
 }
 
 class AutocompleteBasicExample extends StatelessWidget {
-  const AutocompleteBasicExample({Key? key}) : super(key: key);
+  const AutocompleteBasicExample({super.key});
 
-  static const List<String> _options = <String>[
-    'aardvark',
-    'bobcat',
-    'chameleon',
-  ];
+  static const List<String> _options = <String>['aardvark', 'bobcat', 'chameleon'];
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +35,12 @@ class AutocompleteBasicExample extends StatelessWidget {
           return option.contains(textEditingValue.text.toLowerCase());
         });
       },
-      fieldViewBuilder: (BuildContext context,
-          TextEditingController textEditingController,
-          FocusNode focusNode,
-          VoidCallback onFieldSubmitted) {
+      fieldViewBuilder: (
+        BuildContext context,
+        TextEditingController textEditingController,
+        FocusNode focusNode,
+        VoidCallback onFieldSubmitted,
+      ) {
         return TextFormField(
           controller: textEditingController,
           focusNode: focusNode,
@@ -56,8 +49,11 @@ class AutocompleteBasicExample extends StatelessWidget {
           },
         );
       },
-      optionsViewBuilder: (BuildContext context,
-          AutocompleteOnSelected<String> onSelected, Iterable<String> options) {
+      optionsViewBuilder: (
+        BuildContext context,
+        AutocompleteOnSelected<String> onSelected,
+        Iterable<String> options,
+      ) {
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
@@ -73,9 +69,7 @@ class AutocompleteBasicExample extends StatelessWidget {
                     onTap: () {
                       onSelected(option);
                     },
-                    child: ListTile(
-                      title: Text(option),
-                    ),
+                    child: ListTile(title: Text(option)),
                   );
                 },
               ),

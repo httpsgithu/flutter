@@ -2,26 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for DeletableChipAttributes.onDeleted
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [DeletableChipAttributes.onDeleted].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const OnDeletedExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class OnDeletedExampleApp extends StatelessWidget {
+  const OnDeletedExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: _title,
       home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: const Center(
-          child: MyStatefulWidget(),
-        ),
+        appBar: AppBar(title: const Text('DeletableChipAttributes.onDeleted Sample')),
+        body: const Center(child: OnDeletedExample()),
       ),
     );
   }
@@ -34,7 +29,7 @@ class Actor {
 }
 
 class CastList extends StatefulWidget {
-  const CastList({Key? key}) : super(key: key);
+  const CastList({super.key});
 
   @override
   State createState() => CastListState();
@@ -48,9 +43,9 @@ class CastListState extends State<CastList> {
     const Actor('James Madison', 'JM'),
   ];
 
-  Iterable<Widget> get actorWidgets sync* {
-    for (final Actor actor in _cast) {
-      yield Padding(
+  Iterable<Widget> get actorWidgets {
+    return _cast.map((Actor actor) {
+      return Padding(
         padding: const EdgeInsets.all(4.0),
         child: Chip(
           avatar: CircleAvatar(child: Text(actor.initials)),
@@ -64,25 +59,23 @@ class CastListState extends State<CastList> {
           },
         ),
       );
-    }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      children: actorWidgets.toList(),
-    );
+    return Wrap(children: actorWidgets.toList());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class OnDeletedExample extends StatefulWidget {
+  const OnDeletedExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<OnDeletedExample> createState() => _OnDeletedExampleState();
 }
 
-class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+class _OnDeletedExampleState extends State<OnDeletedExample> {
   @override
   Widget build(BuildContext context) {
     return const CastList();

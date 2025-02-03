@@ -5,8 +5,9 @@
 // This file is run as part of a reduced test set in CI on Mac and Windows
 // machines.
 @Tags(<String>['reduced-test-set'])
-
 @TestOn('!chrome')
+library;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -18,10 +19,9 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello',
               textDirection: TextDirection.ltr,
               textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xffff0000)),
@@ -31,10 +31,7 @@ void main() {
       ),
     );
 
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Centered.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Centered.png'));
 
     await tester.pumpWidget(
       Center(
@@ -42,10 +39,9 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello world how are you today',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello world how are you today',
               textDirection: TextDirection.ltr,
               textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xffff0000)),
@@ -55,12 +51,8 @@ void main() {
       ),
     );
 
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Centered.wrap.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Centered.wrap.png'));
   });
-
 
   testWidgets('Text Foreground', (WidgetTester tester) async {
     const Color black = Color(0xFF000000);
@@ -74,12 +66,14 @@ void main() {
       Align(
         alignment: Alignment.topLeft,
         child: RepaintBoundary(
-          child: Text('Hello',
+          child: Text(
+            'Hello',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              foreground: Paint()
-                ..color = black
-                ..shader = linearGradient,
+              foreground:
+                  Paint()
+                    ..color = black
+                    ..shader = linearGradient,
             ),
           ),
         ),
@@ -95,13 +89,15 @@ void main() {
       Align(
         alignment: Alignment.topLeft,
         child: RepaintBoundary(
-          child: Text('Hello',
+          child: Text(
+            'Hello',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              foreground: Paint()
-                ..color = black
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 2.0,
+              foreground:
+                  Paint()
+                    ..color = black
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2.0,
             ),
           ),
         ),
@@ -117,14 +113,16 @@ void main() {
       Align(
         alignment: Alignment.topLeft,
         child: RepaintBoundary(
-          child: Text('Hello',
+          child: Text(
+            'Hello',
             textDirection: TextDirection.ltr,
             style: TextStyle(
-              foreground: Paint()
-                ..color = black
-                ..style = PaintingStyle.stroke
-                ..strokeWidth = 2.0
-                ..shader = linearGradient,
+              foreground:
+                  Paint()
+                    ..color = black
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2.0
+                    ..shader = linearGradient,
             ),
           ),
         ),
@@ -152,24 +150,20 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Colors.green,
-            ),
+            decoration: const BoxDecoration(color: Colors.green),
             child: Text.rich(
               TextSpan(
                 text: 'text1 ',
                 style: TextStyle(
                   color: translucentGreen,
-                  background: Paint()
-                    ..color = red.withOpacity(0.5),
+                  background: Paint()..color = red.withOpacity(0.5),
                 ),
                 children: <InlineSpan>[
                   TextSpan(
                     text: 'text2',
                     style: TextStyle(
                       color: translucentDarkRed,
-                      background: Paint()
-                        ..color = blue.withOpacity(0.5),
+                      background: Paint()..color = blue.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -189,25 +183,25 @@ void main() {
 
   testWidgets('Text Fade', (WidgetTester tester) async {
     await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            backgroundColor: Colors.transparent,
-            body: RepaintBoundary(
-              child: Center(
-                child: Container(
-                  width: 200.0,
-                  height: 200.0,
-                  color: Colors.green,
-                  child: Center(
-                    child: Container(
-                      width: 100.0,
-                      color: Colors.blue,
-                      child: const Text(
-                        'Pp PPp PPPp PPPPp PPPPpp PPPPppp PPPPppppp ',
-                        style: TextStyle(color: Colors.black),
-                        maxLines: 3,
-                        overflow: TextOverflow.fade,
-                      ),
+      MaterialApp(
+        theme: ThemeData(useMaterial3: false),
+        home: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: RepaintBoundary(
+            child: Center(
+              child: Container(
+                width: 200.0,
+                height: 200.0,
+                color: Colors.green,
+                child: Center(
+                  child: Container(
+                    width: 100.0,
+                    color: Colors.blue,
+                    child: const Text(
+                      'Pp PPp PPPp PPPPp PPPPpp PPPPppp PPPPppppp ',
+                      style: TextStyle(color: Colors.black),
+                      maxLines: 3,
+                      overflow: TextOverflow.fade,
                     ),
                   ),
                 ),
@@ -215,6 +209,7 @@ void main() {
             ),
           ),
         ),
+      ),
     );
 
     await expectLater(
@@ -230,10 +225,9 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello\nLine 2\nLine 3',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello\nLine 2\nLine 3',
               textDirection: TextDirection.ltr,
               style: TextStyle(),
               strutStyle: StrutStyle(),
@@ -242,10 +236,7 @@ void main() {
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.StrutDefault.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.StrutDefault.png'));
   });
 
   testWidgets('Strut text 1', (WidgetTester tester) async {
@@ -255,24 +246,18 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello\nLine2\nLine3',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello\nLine2\nLine3',
               textDirection: TextDirection.ltr,
               style: TextStyle(),
-              strutStyle: StrutStyle(
-                height: 1.5,
-              ),
+              strutStyle: StrutStyle(height: 1.5),
             ),
           ),
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Strut.1.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Strut.1.png'));
   });
 
   testWidgets('Strut text 2', (WidgetTester tester) async {
@@ -282,25 +267,18 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello\nLine 2\nLine 3',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello\nLine 2\nLine 3',
               textDirection: TextDirection.ltr,
               style: TextStyle(),
-              strutStyle: StrutStyle(
-                height: 1.5,
-                fontSize: 14,
-              ),
+              strutStyle: StrutStyle(height: 1.5, fontSize: 14),
             ),
           ),
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Strut.2.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Strut.2.png'));
   });
 
   testWidgets('Strut text rich', (WidgetTester tester) async {
@@ -310,48 +288,30 @@ void main() {
           child: Container(
             width: 200.0,
             height: 150.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
             child: const Text.rich(
               TextSpan(
                 text: 'Hello\n',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 30,
-                ),
+                style: TextStyle(color: Colors.red, fontSize: 30),
                 children: <InlineSpan>[
                   TextSpan(
                     text: 'Second line!\n',
-                    style: TextStyle(
-                      fontSize: 5,
-                      color: Colors.blue,
-                    ),
+                    style: TextStyle(fontSize: 5, color: Colors.blue),
                   ),
                   TextSpan(
                     text: 'Third line!\n',
-                    style: TextStyle(
-                      fontSize: 25,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 25, color: Colors.white),
                   ),
                 ],
               ),
               textDirection: TextDirection.ltr,
-              strutStyle: StrutStyle(
-                fontSize: 14,
-                height: 1.1,
-                leading: 0.1,
-              ),
+              strutStyle: StrutStyle(fontSize: 14, height: 1.1, leading: 0.1),
             ),
           ),
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Strut.3.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Strut.3.png'));
   });
 
   testWidgets('Strut text font fallback', (WidgetTester tester) async {
@@ -362,20 +322,14 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: const Text('Hello\nLine 2\nLine 3',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Text(
+              'Hello\nLine 2\nLine 3',
               textDirection: TextDirection.ltr,
               style: TextStyle(),
               strutStyle: StrutStyle(
                 fontFamily: 'FakeFont 1',
-                fontFamilyFallback: <String>[
-                  'FakeFont 2',
-                  'EvilFont 3',
-                  'Nice Font 4',
-                  'ahem',
-                ],
+                fontFamilyFallback: <String>['FakeFont 2', 'EvilFont 3', 'Nice Font 4', 'ahem'],
                 fontSize: 14,
               ),
             ),
@@ -383,10 +337,7 @@ void main() {
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Strut.4.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Strut.4.png'));
   });
 
   testWidgets('Strut text rich forceStrutHeight', (WidgetTester tester) async {
@@ -396,58 +347,38 @@ void main() {
           child: Container(
             width: 200.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
             child: const Text.rich(
               TextSpan(
                 text: 'Hello\n',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontSize: 30,
-                ),
+                style: TextStyle(color: Colors.red, fontSize: 30),
                 children: <InlineSpan>[
                   TextSpan(
                     text: 'Second line!\n',
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: Colors.blue,
-                    ),
+                    style: TextStyle(fontSize: 9, color: Colors.blue),
                   ),
                   TextSpan(
                     text: 'Third line!\n',
-                    style: TextStyle(
-                      fontSize: 27,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 27, color: Colors.white),
                   ),
                 ],
               ),
               textDirection: TextDirection.ltr,
-              strutStyle: StrutStyle(
-                fontSize: 14,
-                height: 1.1,
-                forceStrutHeight: true,
-              ),
+              strutStyle: StrutStyle(fontSize: 14, height: 1.1, forceStrutHeight: true),
             ),
           ),
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.StrutForce.1.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.StrutForce.1.png'));
   });
 
   testWidgets('Decoration thickness', (WidgetTester tester) async {
-    final TextDecoration allDecorations = TextDecoration.combine(
-      <TextDecoration>[
-        TextDecoration.underline,
-        TextDecoration.overline,
-        TextDecoration.lineThrough,
-      ],
-    );
+    final TextDecoration allDecorations = TextDecoration.combine(<TextDecoration>[
+      TextDecoration.underline,
+      TextDecoration.overline,
+      TextDecoration.lineThrough,
+    ]);
 
     await tester.pumpWidget(
       Center(
@@ -455,9 +386,7 @@ void main() {
           child: Container(
             width: 300.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
             child: Text(
               'Hello, wor!\nabcd.',
               style: TextStyle(
@@ -472,20 +401,15 @@ void main() {
         ),
       ),
     );
-    await expectLater(
-      find.byType(Container),
-      matchesGoldenFile('text_golden.Decoration.1.png'),
-    );
+    await expectLater(find.byType(Container), matchesGoldenFile('text_golden.Decoration.1.png'));
   });
 
   testWidgets('Decoration thickness', (WidgetTester tester) async {
-    final TextDecoration allDecorations = TextDecoration.combine(
-      <TextDecoration>[
-        TextDecoration.underline,
-        TextDecoration.overline,
-        TextDecoration.lineThrough,
-      ],
-    );
+    final TextDecoration allDecorations = TextDecoration.combine(<TextDecoration>[
+      TextDecoration.underline,
+      TextDecoration.overline,
+      TextDecoration.lineThrough,
+    ]);
 
     await tester.pumpWidget(
       Center(
@@ -493,9 +417,7 @@ void main() {
           child: Container(
             width: 300.0,
             height: 100.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
             child: Text(
               'Hello, wor!\nabcd.',
               style: TextStyle(
@@ -519,84 +441,71 @@ void main() {
 
   testWidgets('Text Inline widget', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(child: Checkbox(value: true, onChanged: null)),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          WidgetSpan(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                        ),
-                        WidgetSpan(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            child: Checkbox(value: false, onChanged: null),
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
                           ),
-                        ),
-                        WidgetSpan(
-                          child: Text('embedded'),
-                        ),
-                      ],
+                          WidgetSpan(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(child: Text('embedded')),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -615,30 +524,26 @@ void main() {
     await tester.pumpWidget(
       Center(
         child: MaterialApp(
+          theme: ThemeData(useMaterial3: false),
           home: RepaintBoundary(
             child: Material(
               child: Container(
                 width: 400.0,
                 height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
+                decoration: const BoxDecoration(color: Color(0xff00ff00)),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
                   child: const Text.rich(
                     TextSpan(
                       text: 'My name is: ',
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
+                      style: TextStyle(fontSize: 20),
                       children: <InlineSpan>[
-                        WidgetSpan(
-                          child: SizedBox(width: 70, height: 25, child: TextField()),
+                        WidgetSpan(child: SizedBox(width: 70, height: 25, child: TextField())),
+                        TextSpan(
+                          text: ', and my favorite city is: ',
+                          style: TextStyle(fontSize: 20),
                         ),
-                        TextSpan(text: ', and my favorite city is: ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          child: SizedBox(width: 70, height: 25, child: TextField()),
-                        ),
+                        WidgetSpan(child: SizedBox(width: 70, height: 25, child: TextField())),
                       ],
                     ),
                     textDirection: TextDirection.ltr,
@@ -661,22 +566,19 @@ void main() {
     await tester.pumpWidget(
       Center(
         child: MaterialApp(
+          theme: ThemeData(useMaterial3: false),
           home: RepaintBoundary(
             child: Material(
               child: Container(
                 width: 400.0,
                 height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
+                decoration: const BoxDecoration(color: Color(0xff00ff00)),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
                   child: const Text.rich(
                     TextSpan(
                       text: 'outer',
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
+                      style: TextStyle(fontSize: 20),
                       children: <InlineSpan>[
                         WidgetSpan(
                           child: Text.rich(
@@ -695,11 +597,9 @@ void main() {
                                             width: 50.0,
                                             height: 55.0,
                                             child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                color: Color(0xffffff30),
-                                              ),
+                                              decoration: BoxDecoration(color: Color(0xffffff30)),
                                               child: Center(
-                                                child:SizedBox(
+                                                child: SizedBox(
                                                   width: 10.0,
                                                   height: 15.0,
                                                   child: DecoratedBox(
@@ -721,17 +621,13 @@ void main() {
                                     width: 50.0,
                                     height: 55.0,
                                     child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        color: Color(0xff5fff00),
-                                      ),
+                                      decoration: BoxDecoration(color: Color(0xff5fff00)),
                                       child: Center(
-                                        child:SizedBox(
+                                        child: SizedBox(
                                           width: 10.0,
                                           height: 15.0,
                                           child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              color: Color(0xff5f0000),
-                                            ),
+                                            decoration: BoxDecoration(color: Color(0xff5f0000)),
                                           ),
                                         ),
                                       ),
@@ -743,25 +639,19 @@ void main() {
                           ),
                         ),
                         TextSpan(text: 'outer', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          child: SizedBox(width: 70, height: 25, child: TextField()),
-                        ),
+                        WidgetSpan(child: SizedBox(width: 70, height: 25, child: TextField())),
                         WidgetSpan(
                           child: SizedBox(
                             width: 50.0,
                             height: 55.0,
                             child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffff00ff),
-                              ),
+                              decoration: BoxDecoration(color: Color(0xffff00ff)),
                               child: Center(
-                                child:SizedBox(
+                                child: SizedBox(
                                   width: 10.0,
                                   height: 15.0,
                                   child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xff0000ff),
-                                    ),
+                                    decoration: BoxDecoration(color: Color(0xff0000ff)),
                                   ),
                                 ),
                               ),
@@ -787,97 +677,90 @@ void main() {
 
   testWidgets('Text Inline widget baseline', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: true, onChanged: null),
+                          ),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.baseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Text('embedded'),
-                        ),
-                        TextSpan(text: 'ref'),
-                      ],
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.baseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Text('embedded'),
+                          ),
+                          TextSpan(text: 'ref'),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -894,97 +777,90 @@ void main() {
 
   testWidgets('Text Inline widget aboveBaseline', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: true, onChanged: null),
+                          ),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.aboveBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Text('embedded'),
-                        ),
-                        TextSpan(text: 'ref'),
-                      ],
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.aboveBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Text('embedded'),
+                          ),
+                          TextSpan(text: 'ref'),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -1001,97 +877,90 @@ void main() {
 
   testWidgets('Text Inline widget belowBaseline', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: true, onChanged: null),
+                          ),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.belowBaseline,
-                          baseline: TextBaseline.alphabetic,
-                          child: Text('embedded'),
-                        ),
-                        TextSpan(text: 'ref'),
-                      ],
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.belowBaseline,
+                            baseline: TextBaseline.alphabetic,
+                            child: Text('embedded'),
+                          ),
+                          TextSpan(text: 'ref'),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -1108,97 +977,90 @@ void main() {
 
   testWidgets('Text Inline widget top', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: true, onChanged: null),
+                          ),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.top,
-                          baseline: TextBaseline.alphabetic,
-                          child: Text('embedded'),
-                        ),
-                        TextSpan(text: 'ref'),
-                      ],
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.top,
+                            baseline: TextBaseline.alphabetic,
+                            child: Text('embedded'),
+                          ),
+                          TextSpan(text: 'ref'),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -1215,97 +1077,90 @@ void main() {
 
   testWidgets('Text Inline widget middle', (WidgetTester tester) async {
     await tester.pumpWidget(
-      Center(
-        child: RepaintBoundary(
-          child: Material(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Container(
-                width: 400.0,
-                height: 200.0,
-                decoration: const BoxDecoration(
-                  color: Color(0xff00ff00),
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
-                  child: const Text.rich(
-                    TextSpan(
-                      text: 'C ',
-                      style: TextStyle(
-                        fontSize: 16,
-                      ),
-                      children: <InlineSpan>[
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: true, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 55.0,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: Color(0xffffff00),
-                              ),
-                              child: Center(
-                                child:SizedBox(
-                                  width: 10.0,
-                                  height: 15.0,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: Color(0xffff0000),
+      Theme(
+        data: ThemeData(useMaterial3: false),
+        child: Center(
+          child: RepaintBoundary(
+            child: Material(
+              child: Directionality(
+                textDirection: TextDirection.ltr,
+                child: Container(
+                  width: 400.0,
+                  height: 200.0,
+                  decoration: const BoxDecoration(color: Color(0xff00ff00)),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200, maxHeight: 100),
+                    child: const Text.rich(
+                      TextSpan(
+                        text: 'C ',
+                        style: TextStyle(fontSize: 16),
+                        children: <InlineSpan>[
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: true, onChanged: null),
+                          ),
+                          WidgetSpan(child: Checkbox(value: false, onChanged: null)),
+                          TextSpan(text: 'He ', style: TextStyle(fontSize: 20)),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 50.0,
+                              height: 55.0,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(color: Color(0xffffff00)),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 10.0,
+                                    height: 15.0,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(color: Color(0xffff0000)),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        TextSpan(text: 'hello world! seize the day!'),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          TextSpan(text: 'hello world! seize the day!'),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: Checkbox(value: false, onChanged: null),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: Checkbox(value: true, onChanged: null),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
                           ),
-                        ),
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          baseline: TextBaseline.alphabetic,
-                          child: Text('embedded'),
-                        ),
-                        TextSpan(text: 'ref'),
-                      ],
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: Checkbox(value: false, onChanged: null),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: Checkbox(value: true, onChanged: null),
+                            ),
+                          ),
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            baseline: TextBaseline.alphabetic,
+                            child: Text('embedded'),
+                          ),
+                          TextSpan(text: 'ref'),
+                        ],
+                      ),
+                      textDirection: TextDirection.ltr,
                     ),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
@@ -1327,16 +1182,16 @@ void main() {
           child: Container(
             width: 200.0,
             height: 700.0,
-            decoration: const BoxDecoration(
-              color: Color(0xff00ff00),
-            ),
-            child: Column(
-              children: const <Widget>[
-                Text('Hello\nLine 2\nLine 3',
+            decoration: const BoxDecoration(color: Color(0xff00ff00)),
+            child: const Column(
+              children: <Widget>[
+                Text(
+                  'Hello\nLine 2\nLine 3',
                   textDirection: TextDirection.ltr,
                   style: TextStyle(height: 5),
                 ),
-                Text('Hello\nLine 2\nLine 3',
+                Text(
+                  'Hello\nLine 2\nLine 3',
                   textDirection: TextDirection.ltr,
                   style: TextStyle(height: 5),
                   textHeightBehavior: TextHeightBehavior(
@@ -1344,12 +1199,11 @@ void main() {
                     applyHeightToLastDescent: false,
                   ),
                 ),
-                Text('Hello',
+                Text(
+                  'Hello',
                   textDirection: TextDirection.ltr,
                   style: TextStyle(height: 5),
-                  textHeightBehavior: TextHeightBehavior(
-                    applyHeightToFirstAscent: false,
-                  ),
+                  textHeightBehavior: TextHeightBehavior(applyHeightToFirstAscent: false),
                 ),
               ],
             ),

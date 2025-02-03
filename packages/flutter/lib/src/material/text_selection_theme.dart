@@ -2,10 +2,20 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'package:flutter/cupertino.dart';
+///
+/// @docImport 'input_decorator.dart';
+/// @docImport 'selectable_text.dart';
+/// @docImport 'text_field.dart';
+library;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'theme.dart';
+
+// Examples can assume:
+// late BuildContext context;
 
 /// Defines the visual properties needed for text selection in [TextField] and
 /// [SelectableText] widgets.
@@ -25,11 +35,7 @@ import 'theme.dart';
 @immutable
 class TextSelectionThemeData with Diagnosticable {
   /// Creates the set of properties used to configure [TextField]s.
-  const TextSelectionThemeData({
-    this.cursorColor,
-    this.selectionColor,
-    this.selectionHandleColor,
-  });
+  const TextSelectionThemeData({this.cursorColor, this.selectionColor, this.selectionHandleColor});
 
   /// The color of the cursor in the text field.
   ///
@@ -69,10 +75,14 @@ class TextSelectionThemeData with Diagnosticable {
   /// If both arguments are null, then null is returned.
   ///
   /// {@macro dart.ui.shadow.lerp}
-  static TextSelectionThemeData? lerp(TextSelectionThemeData? a, TextSelectionThemeData? b, double t) {
-    if (a == null && b == null)
-      return null;
-    assert(t != null);
+  static TextSelectionThemeData? lerp(
+    TextSelectionThemeData? a,
+    TextSelectionThemeData? b,
+    double t,
+  ) {
+    if (identical(a, b)) {
+      return a;
+    }
     return TextSelectionThemeData(
       cursorColor: Color.lerp(a?.cursorColor, b?.cursorColor, t),
       selectionColor: Color.lerp(a?.selectionColor, b?.selectionColor, t),
@@ -81,24 +91,20 @@ class TextSelectionThemeData with Diagnosticable {
   }
 
   @override
-  int get hashCode {
-    return hashValues(
-      cursorColor,
-      selectionColor,
-      selectionHandleColor,
-    );
-  }
+  int get hashCode => Object.hash(cursorColor, selectionColor, selectionHandleColor);
 
   @override
-  bool operator==(Object other) {
-    if (identical(this, other))
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
       return true;
-    if (other.runtimeType != runtimeType)
+    }
+    if (other.runtimeType != runtimeType) {
       return false;
-    return other is TextSelectionThemeData
-      && other.cursorColor == cursorColor
-      && other.selectionColor == selectionColor
-      && other.selectionHandleColor == selectionHandleColor;
+    }
+    return other is TextSelectionThemeData &&
+        other.cursorColor == cursorColor &&
+        other.selectionColor == selectionColor &&
+        other.selectionHandleColor == selectionHandleColor;
   }
 
   @override
@@ -131,19 +137,34 @@ class TextSelectionThemeData with Diagnosticable {
 /// )
 /// ```
 /// {@end-tool}
+///
+/// This widget also creates a [DefaultSelectionStyle] for its subtree with
+/// [data].
 class TextSelectionTheme extends InheritedTheme {
   /// Creates a text selection theme widget that specifies the text
   /// selection properties for all widgets below it in the widget tree.
-  ///
-  /// The data argument must not be null.
-  const TextSelectionTheme({
-    Key? key,
-    required this.data,
-    required Widget child,
-  }) : assert(data != null), super(key: key, child: child);
+  const TextSelectionTheme({super.key, required this.data, required Widget child})
+    : _child = child,
+      // See `get child` override below.
+      super(child: const _NullWidget());
 
   /// The properties for descendant [TextField] and [SelectableText] widgets.
   final TextSelectionThemeData data;
+
+  // Overriding the getter to insert `DefaultSelectionStyle` into the subtree
+  // without breaking API. In general, this approach should be avoided
+  // because it relies on an implementation detail of ProxyWidget. This
+  // workaround is necessary because TextSelectionTheme is const.
+  @override
+  Widget get child {
+    return DefaultSelectionStyle(
+      selectionColor: data.selectionColor,
+      cursorColor: data.cursorColor,
+      child: _child,
+    );
+  }
+
+  final Widget _child;
 
   /// Returns the [data] from the closest [TextSelectionTheme] ancestor. If
   /// there is no ancestor, it returns [ThemeData.textSelectionTheme].
@@ -155,7 +176,8 @@ class TextSelectionTheme extends InheritedTheme {
   /// TextSelectionThemeData theme = TextSelectionTheme.of(context);
   /// ```
   static TextSelectionThemeData of(BuildContext context) {
-    final TextSelectionTheme? selectionTheme = context.dependOnInheritedWidgetOfExactType<TextSelectionTheme>();
+    final TextSelectionTheme? selectionTheme =
+        context.dependOnInheritedWidgetOfExactType<TextSelectionTheme>();
     return selectionTheme?.data ?? Theme.of(context).textSelectionTheme;
   }
 
@@ -166,4 +188,11 @@ class TextSelectionTheme extends InheritedTheme {
 
   @override
   bool updateShouldNotify(TextSelectionTheme oldWidget) => data != oldWidget.data;
+}
+
+class _NullWidget extends Widget {
+  const _NullWidget();
+
+  @override
+  Element createElement() => throw UnimplementedError();
 }

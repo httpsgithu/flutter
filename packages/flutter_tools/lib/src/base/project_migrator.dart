@@ -16,8 +16,7 @@ abstract class ProjectMigrator {
   @protected
   final Logger logger;
 
-  /// Returns whether migration was successful or was skipped.
-  bool migrate();
+  Future<void> migrate();
 
   /// Return null if the line should be deleted.
   @protected
@@ -62,7 +61,9 @@ abstract class ProjectMigrator {
     }
 
     final String projectContentsWithMigratedLines = newProjectContents.toString();
-    final String projectContentsWithMigratedContents = migrateFileContents(projectContentsWithMigratedLines);
+    final String projectContentsWithMigratedContents = migrateFileContents(
+      projectContentsWithMigratedLines,
+    );
     if (projectContentsWithMigratedLines != projectContentsWithMigratedContents) {
       logger.printTrace('Migrating $basename contents');
       _migrationRequired = true;
@@ -80,15 +81,9 @@ class ProjectMigration {
 
   final List<ProjectMigrator> migrators;
 
-  bool run() {
+  Future<void> run() async {
     for (final ProjectMigrator migrator in migrators) {
-      if (!migrator.migrate()) {
-        // Migration failures should be more robust, with transactions and fallbacks.
-        // See https://github.com/flutter/flutter/issues/12573 and
-        // https://github.com/flutter/flutter/issues/40460
-        return false;
-      }
+      await migrator.migrate();
     }
-    return true;
   }
 }

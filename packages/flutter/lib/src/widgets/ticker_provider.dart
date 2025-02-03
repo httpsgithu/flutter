@@ -2,12 +2,18 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'package:flutter/animation.dart';
+library;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 
 import 'framework.dart';
 
 export 'package:flutter/scheduler.dart' show TickerProvider;
+
+// Examples can assume:
+// late BuildContext context;
 
 /// Enables or disables tickers (and thus animation controllers) in the widget
 /// subtree.
@@ -17,14 +23,7 @@ export 'package:flutter/scheduler.dart' show TickerProvider;
 /// [TickerProviderStateMixin] or a [SingleTickerProviderStateMixin].
 class TickerMode extends StatefulWidget {
   /// Creates a widget that enables or disables tickers.
-  ///
-  /// The [enabled] argument must not be null.
-  const TickerMode({
-    Key? key,
-    required this.enabled,
-    required this.child,
-  }) : assert(enabled != null),
-       super(key: key);
+  const TickerMode({super.key, required this.enabled, required this.child});
 
   /// The requested ticker mode for this subtree.
   ///
@@ -58,26 +57,27 @@ class TickerMode extends StatefulWidget {
   /// bool tickingEnabled = TickerMode.of(context);
   /// ```
   static bool of(BuildContext context) {
-    final _EffectiveTickerMode? widget = context.dependOnInheritedWidgetOfExactType<_EffectiveTickerMode>();
+    final _EffectiveTickerMode? widget =
+        context.dependOnInheritedWidgetOfExactType<_EffectiveTickerMode>();
     return widget?.enabled ?? true;
   }
 
-  /// Obtains a [ValueNotifier] from the [TickerMode] surrounding the `context`,
+  /// Obtains a [ValueListenable] from the [TickerMode] surrounding the `context`,
   /// which indicates whether tickers are enabled in the given subtree.
   ///
-  /// When that [TickerMode] enabled or disabled tickers, the notifier notifies
+  /// When that [TickerMode] enabled or disabled tickers, the listenable notifies
   /// its listeners.
   ///
-  /// While the [ValueNotifier] is stable for the lifetime of the surrounding
+  /// While the [ValueListenable] is stable for the lifetime of the surrounding
   /// [TickerMode], calling this method does not establish a dependency between
   /// the `context` and the [TickerMode] and the widget owning the `context`
   /// does not rebuild when the ticker mode changes from true to false or vice
   /// versa. This is preferable when the ticker mode does not impact what is
-  /// currently rendered on screen, e.g. because it is ony used to mute/unmute a
+  /// currently rendered on screen, e.g. because it is only used to mute/unmute a
   /// [Ticker]. Since no dependency is established, the widget owning the
   /// `context` is also not informed when it is moved to a new location in the
   /// tree where it may have a different [TickerMode] ancestor. When this
-  /// happens, the widget must manually unsubscribe from the old notifier,
+  /// happens, the widget must manually unsubscribe from the old listenable,
   /// obtain a new one from the new ancestor [TickerMode] by calling this method
   /// again, and re-subscribe to it. [StatefulWidget]s can, for example, do this
   /// in [State.activate], which is called after the widget has been moved to
@@ -91,10 +91,11 @@ class TickerMode extends StatefulWidget {
   /// potential unnecessary rebuilds.
   ///
   /// In the absence of a [TickerMode] widget, this function returns a
-  /// [ValueNotifier], whose [ValueNotifier.value] is always true.
-  static ValueNotifier<bool> getNotifier(BuildContext context) {
-    final _EffectiveTickerMode? widget = context.getElementForInheritedWidgetOfExactType<_EffectiveTickerMode>()?.widget as _EffectiveTickerMode?;
-    return widget?.notifier ?? ValueNotifier<bool>(true);
+  /// [ValueListenable], whose [ValueListenable.value] is always true.
+  static ValueListenable<bool> getNotifier(BuildContext context) {
+    final _EffectiveTickerMode? widget =
+        context.getInheritedWidgetOfExactType<_EffectiveTickerMode>();
+    return widget?.notifier ?? const _ConstantValueListenable<bool>(true);
   }
 
   @override
@@ -140,18 +141,20 @@ class _TickerModeState extends State<TickerMode> {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(FlagProperty('requested mode', value: widget.enabled, ifTrue: 'enabled', ifFalse: 'disabled', showName: true));
+    properties.add(
+      FlagProperty(
+        'requested mode',
+        value: widget.enabled,
+        ifTrue: 'enabled',
+        ifFalse: 'disabled',
+        showName: true,
+      ),
+    );
   }
 }
 
 class _EffectiveTickerMode extends InheritedWidget {
-  const _EffectiveTickerMode({
-    Key? key,
-    required this.enabled,
-    required this.notifier,
-    required Widget child,
-  }) : assert(enabled != null),
-       super(key: key, child: child);
+  const _EffectiveTickerMode({required this.enabled, required this.notifier, required super.child});
 
   final bool enabled;
   final ValueNotifier<bool> notifier;
@@ -162,7 +165,15 @@ class _EffectiveTickerMode extends InheritedWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(FlagProperty('effective mode', value: enabled, ifTrue: 'enabled', ifFalse: 'disabled', showName: true));
+    properties.add(
+      FlagProperty(
+        'effective mode',
+        value: enabled,
+        ifTrue: 'enabled',
+        ifFalse: 'disabled',
+        showName: true,
+      ),
+    );
   }
 }
 
@@ -177,17 +188,23 @@ class _EffectiveTickerMode extends InheritedWidget {
 /// [AnimationController] objects over the lifetime of the [State], use a full
 /// [TickerProviderStateMixin] instead.
 @optionalTypeArgs
-mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> implements TickerProvider {
+mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T>
+    implements TickerProvider {
   Ticker? _ticker;
 
   @override
   Ticker createTicker(TickerCallback onTick) {
     assert(() {
-      if (_ticker == null)
+      if (_ticker == null) {
         return true;
+      }
       throw FlutterError.fromParts(<DiagnosticsNode>[
-        ErrorSummary('$runtimeType is a SingleTickerProviderStateMixin but multiple tickers were created.'),
-        ErrorDescription('A SingleTickerProviderStateMixin can only be used as a TickerProvider once.'),
+        ErrorSummary(
+          '$runtimeType is a SingleTickerProviderStateMixin but multiple tickers were created.',
+        ),
+        ErrorDescription(
+          'A SingleTickerProviderStateMixin can only be used as a TickerProvider once.',
+        ),
         ErrorHint(
           'If a State is used for multiple AnimationController objects, or if it is passed to other '
           'objects and those objects might use it more than one time in total, then instead of '
@@ -195,7 +212,10 @@ mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> imple
         ),
       ]);
     }());
-    _ticker = Ticker(onTick, debugLabel: kDebugMode ? 'created by ${describeIdentity(this)}' : null);
+    _ticker = Ticker(
+      onTick,
+      debugLabel: kDebugMode ? 'created by ${describeIdentity(this)}' : null,
+    );
     _updateTickerModeNotifier();
     _updateTicker(); // Sets _ticker.mute correctly.
     return _ticker!;
@@ -204,8 +224,9 @@ mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> imple
   @override
   void dispose() {
     assert(() {
-      if (_ticker == null || !_ticker!.isActive)
+      if (_ticker == null || !_ticker!.isActive) {
         return true;
+      }
       throw FlutterError.fromParts(<DiagnosticsNode>[
         ErrorSummary('$this was disposed with an active Ticker.'),
         ErrorDescription(
@@ -226,7 +247,7 @@ mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> imple
     super.dispose();
   }
 
-  ValueNotifier<bool>? _tickerModeNotifier;
+  ValueListenable<bool>? _tickerModeNotifier;
 
   @override
   void activate() {
@@ -236,14 +257,10 @@ mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> imple
     _updateTicker();
   }
 
-  void _updateTicker() {
-    if (_ticker != null) {
-      _ticker!.muted = !_tickerModeNotifier!.value;
-    }
-  }
+  void _updateTicker() => _ticker?.muted = !_tickerModeNotifier!.value;
 
   void _updateTickerModeNotifier() {
-    final ValueNotifier<bool> newNotifier = TickerMode.getNotifier(context);
+    final ValueListenable<bool> newNotifier = TickerMode.getNotifier(context);
     if (newNotifier == _tickerModeNotifier) {
       return;
     }
@@ -255,18 +272,22 @@ mixin SingleTickerProviderStateMixin<T extends StatefulWidget> on State<T> imple
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    String? tickerDescription;
-    if (_ticker != null) {
-      if (_ticker!.isActive && _ticker!.muted)
-        tickerDescription = 'active but muted';
-      else if (_ticker!.isActive)
-        tickerDescription = 'active';
-      else if (_ticker!.muted)
-        tickerDescription = 'inactive and muted';
-      else
-        tickerDescription = 'inactive';
-    }
-    properties.add(DiagnosticsProperty<Ticker>('ticker', _ticker, description: tickerDescription, showSeparator: false, defaultValue: null));
+    final String? tickerDescription = switch ((_ticker?.isActive, _ticker?.muted)) {
+      (true, true) => 'active but muted',
+      (true, _) => 'active',
+      (false, true) => 'inactive and muted',
+      (false, _) => 'inactive',
+      (null, _) => null,
+    };
+    properties.add(
+      DiagnosticsProperty<Ticker>(
+        'ticker',
+        _ticker,
+        description: tickerDescription,
+        showSeparator: false,
+        defaultValue: null,
+      ),
+    );
   }
 }
 
@@ -292,8 +313,11 @@ mixin TickerProviderStateMixin<T extends StatefulWidget> on State<T> implements 
     }
     assert(_tickerModeNotifier != null);
     _tickers ??= <_WidgetTicker>{};
-    final _WidgetTicker result = _WidgetTicker(onTick, this, debugLabel: kDebugMode ? 'created by ${describeIdentity(this)}' : null)
-      ..muted = !_tickerModeNotifier!.value;
+    final _WidgetTicker result = _WidgetTicker(
+      onTick,
+      this,
+      debugLabel: kDebugMode ? 'created by ${describeIdentity(this)}' : null,
+    )..muted = !_tickerModeNotifier!.value;
     _tickers!.add(result);
     return result;
   }
@@ -304,7 +328,7 @@ mixin TickerProviderStateMixin<T extends StatefulWidget> on State<T> implements 
     _tickers!.remove(ticker);
   }
 
-  ValueNotifier<bool>? _tickerModeNotifier;
+  ValueListenable<bool>? _tickerModeNotifier;
 
   @override
   void activate() {
@@ -324,7 +348,7 @@ mixin TickerProviderStateMixin<T extends StatefulWidget> on State<T> implements 
   }
 
   void _updateTickerModeNotifier() {
-    final ValueNotifier<bool> newNotifier = TickerMode.getNotifier(context);
+    final ValueListenable<bool> newNotifier = TickerMode.getNotifier(context);
     if (newNotifier == _tickerModeNotifier) {
       return;
     }
@@ -366,14 +390,17 @@ mixin TickerProviderStateMixin<T extends StatefulWidget> on State<T> implements 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<Set<Ticker>>(
-      'tickers',
-      _tickers,
-      description: _tickers != null ?
-        'tracking ${_tickers!.length} ticker${_tickers!.length == 1 ? "" : "s"}' :
-        null,
-      defaultValue: null,
-    ));
+    properties.add(
+      DiagnosticsProperty<Set<Ticker>>(
+        'tickers',
+        _tickers,
+        description:
+            _tickers != null
+                ? 'tracking ${_tickers!.length} ticker${_tickers!.length == 1 ? "" : "s"}'
+                : null,
+        defaultValue: null,
+      ),
+    );
   }
 }
 
@@ -382,7 +409,7 @@ mixin TickerProviderStateMixin<T extends StatefulWidget> on State<T> implements 
 // confusing. Instead we use the less precise but more anodyne "_WidgetTicker",
 // which attracts less attention.
 class _WidgetTicker extends Ticker {
-  _WidgetTicker(TickerCallback onTick, this._creator, { String? debugLabel }) : super(onTick, debugLabel: debugLabel);
+  _WidgetTicker(super.onTick, this._creator, {super.debugLabel});
 
   final TickerProviderStateMixin _creator;
 
@@ -391,4 +418,23 @@ class _WidgetTicker extends Ticker {
     _creator._removeTicker(this);
     super.dispose();
   }
+}
+
+class _ConstantValueListenable<T> implements ValueListenable<T> {
+  const _ConstantValueListenable(this.value);
+
+  @override
+  void addListener(VoidCallback listener) {
+    // Intentionally left empty: Value cannot change, so we never have to
+    // notify registered listeners.
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    // Intentionally left empty: Value cannot change, so we never have to
+    // notify registered listeners.
+  }
+
+  @override
+  final T value;
 }

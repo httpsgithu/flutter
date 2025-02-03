@@ -11,37 +11,25 @@ void main() {
       vsync: const TestVSync(),
       duration: const Duration(milliseconds: 300),
     );
+    addTearDown(controller.dispose);
 
-    await tester.pumpWidget(Center(
-      child: DualTransitionBuilder(
-        animation: controller,
-        forwardBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return ScaleTransition(
-            scale: animation,
-            child: child,
-          );
-        },
-        reverseBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
-            child: child,
-          );
-        },
-        child: Container(
-          color: Colors.green,
-          height: 100,
-          width: 100,
+    await tester.pumpWidget(
+      Center(
+        child: DualTransitionBuilder(
+          animation: controller,
+          forwardBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return ScaleTransition(scale: animation, child: child);
+          },
+          reverseBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return FadeTransition(
+              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
+              child: child,
+            );
+          },
+          child: Container(color: Colors.green, height: 100, width: 100),
         ),
       ),
-    ));
+    );
     expect(_getScale(tester), 0.0);
     expect(_getOpacity(tester), 1.0);
 
@@ -79,38 +67,29 @@ void main() {
       vsync: const TestVSync(),
       duration: const Duration(milliseconds: 300),
     );
+    addTearDown(controller.dispose);
 
-    await tester.pumpWidget(Directionality(
-      textDirection: TextDirection.ltr,
-      child: Center(
-        child: DualTransitionBuilder(
-          animation: controller,
-          forwardBuilder: (
-            BuildContext context,
-            Animation<double> animation,
-            Widget? child,
-          ) {
-            return ScaleTransition(
-              scale: animation,
-              child: child,
-            );
-          },
-          reverseBuilder: (
-            BuildContext context,
-            Animation<double> animation,
-            Widget? child,
-          ) {
-            return FadeTransition(
-              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
-              child: child,
-            );
-          },
-          child: const _StatefulTestWidget(name: 'Foo'),
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Center(
+          child: DualTransitionBuilder(
+            animation: controller,
+            forwardBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            reverseBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+              return FadeTransition(
+                opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
+                child: child,
+              );
+            },
+            child: const _StatefulTestWidget(name: 'Foo'),
+          ),
         ),
       ),
-    ));
-    final State<StatefulWidget> state =
-        tester.state(find.byType(_StatefulTestWidget));
+    );
+    final State<StatefulWidget> state = tester.state(find.byType(_StatefulTestWidget));
     expect(state, isNotNull);
 
     controller.forward();
@@ -143,36 +122,25 @@ void main() {
       vsync: const TestVSync(),
       duration: const Duration(milliseconds: 300),
     );
-    await tester.pumpWidget(Center(
-      child: DualTransitionBuilder(
-        animation: controller,
-        forwardBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return ScaleTransition(
-            scale: animation,
-            child: child,
-          );
-        },
-        reverseBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
-            child: child,
-          );
-        },
-        child: Container(
-          color: Colors.green,
-          height: 100,
-          width: 100,
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      Center(
+        child: DualTransitionBuilder(
+          animation: controller,
+          forwardBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return ScaleTransition(scale: animation, child: child);
+          },
+          reverseBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return FadeTransition(
+              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
+              child: child,
+            );
+          },
+          child: Container(color: Colors.green, height: 100, width: 100),
         ),
       ),
-    ));
+    );
     expect(_getScale(tester), 0.0);
     expect(_getOpacity(tester), 1.0);
 
@@ -208,36 +176,25 @@ void main() {
       vsync: const TestVSync(),
       duration: const Duration(milliseconds: 300),
     );
-    await tester.pumpWidget(Center(
-      child: DualTransitionBuilder(
-        animation: controller,
-        forwardBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return ScaleTransition(
-            scale: animation,
-            child: child,
-          );
-        },
-        reverseBuilder: (
-          BuildContext context,
-          Animation<double> animation,
-          Widget? child,
-        ) {
-          return FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
-            child: child,
-          );
-        },
-        child: Container(
-          color: Colors.green,
-          height: 100,
-          width: 100,
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      Center(
+        child: DualTransitionBuilder(
+          animation: controller,
+          forwardBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return ScaleTransition(scale: animation, child: child);
+          },
+          reverseBuilder: (BuildContext context, Animation<double> animation, Widget? child) {
+            return FadeTransition(
+              opacity: Tween<double>(begin: 1.0, end: 0.0).animate(animation),
+              child: child,
+            );
+          },
+          child: Container(color: Colors.green, height: 100, width: 100),
         ),
       ),
-    ));
+    );
     expect(_getScale(tester), 1.0);
     expect(_getOpacity(tester), 1.0);
 
@@ -279,7 +236,7 @@ double _getOpacity(WidgetTester tester) {
 }
 
 class _StatefulTestWidget extends StatefulWidget {
-  const _StatefulTestWidget({Key? key, required this.name}) : super(key: key);
+  const _StatefulTestWidget({required this.name});
 
   final String name;
 

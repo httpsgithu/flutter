@@ -2,35 +2,32 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for DefaultTextStyleTransition
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [DefaultTextStyleTransition].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const DefaultTextStyleTransitionExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class DefaultTextStyleTransitionExampleApp extends StatelessWidget {
+  const DefaultTextStyleTransitionExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatefulWidget(),
-    );
+    return const MaterialApp(home: DefaultTextStyleTransitionExample());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class DefaultTextStyleTransitionExample extends StatefulWidget {
+  const DefaultTextStyleTransitionExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<DefaultTextStyleTransitionExample> createState() =>
+      _DefaultTextStyleTransitionExampleState();
 }
 
-/// AnimationControllers can be created with `vsync: this` because of TickerProviderStateMixin.
-class _MyStatefulWidgetState extends State<MyStatefulWidget>
+/// [AnimationController]s can be created with `vsync: this` because of
+/// [TickerProviderStateMixin].
+class _DefaultTextStyleTransitionExampleState extends State<DefaultTextStyleTransitionExample>
     with TickerProviderStateMixin {
   late AnimationController _controller;
   late TextStyleTween _styleTween;
@@ -39,20 +36,13 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
+    _controller = AnimationController(duration: const Duration(seconds: 2), vsync: this)
+      ..repeat(reverse: true);
     _styleTween = TextStyleTween(
-      begin: const TextStyle(
-          fontSize: 50, color: Colors.blue, fontWeight: FontWeight.w900),
-      end: const TextStyle(
-          fontSize: 50, color: Colors.red, fontWeight: FontWeight.w100),
+      begin: const TextStyle(fontSize: 50, color: Colors.blue, fontWeight: FontWeight.w900),
+      end: const TextStyle(fontSize: 50, color: Colors.red, fontWeight: FontWeight.w100),
     );
-    _curvedAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticInOut,
-    );
+    _curvedAnimation = CurvedAnimation(parent: _controller, curve: Curves.elasticInOut);
   }
 
   @override

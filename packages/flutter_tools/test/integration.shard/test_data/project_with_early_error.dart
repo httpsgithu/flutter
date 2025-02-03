@@ -5,12 +5,11 @@
 import 'project.dart';
 
 class ProjectWithEarlyError extends Project {
-
   @override
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
 
   dependencies:
     flutter:
@@ -25,7 +24,7 @@ class ProjectWithEarlyError extends Project {
 
   Future<void> main() async {
     while (true) {
-      runApp(new MyApp());
+      runApp(MyApp());
       await Future.delayed(const Duration(milliseconds: 50));
     }
   }
@@ -37,5 +36,4 @@ class ProjectWithEarlyError extends Project {
     }
   }
   ''';
-
 }

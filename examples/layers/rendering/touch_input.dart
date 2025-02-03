@@ -8,6 +8,8 @@
 import 'package:flutter/material.dart'; // Imported just for its color palette.
 import 'package:flutter/rendering.dart';
 
+import 'src/binding.dart';
+
 // Material design colors. :p
 List<Color> _kColors = <Color>[
   Colors.teal,
@@ -20,7 +22,7 @@ List<Color> _kColors = <Color>[
 
 /// A simple model object for a dot that reacts to pointer pressure.
 class Dot {
-  Dot({ required Color color }) : _paint = Paint()..color = color;
+  Dot({required Color color}) : _paint = Paint()..color = color;
 
   final Paint _paint;
   Offset position = Offset.zero;
@@ -94,18 +96,16 @@ class RenderDots extends RenderBox {
     canvas.drawRect(offset & size, Paint()..color = const Color(0xFFFFFFFF));
 
     // We iterate through our model and paint each dot.
-    for (final Dot dot in _dots.values)
+    for (final Dot dot in _dots.values) {
       dot.paint(canvas, offset);
+    }
   }
 }
 
 void main() {
   // Create some styled text to tell the user to interact with the app.
   final RenderParagraph paragraph = RenderParagraph(
-    const TextSpan(
-      style: TextStyle(color: Colors.black87),
-      text: 'Touch me!',
-    ),
+    const TextSpan(style: TextStyle(color: Colors.black87), text: 'Touch me!'),
     textDirection: TextDirection.ltr,
   );
   // A stack is a render object that layers its children on top of each other.
@@ -113,10 +113,7 @@ void main() {
   // text.
   final RenderStack stack = RenderStack(
     textDirection: TextDirection.ltr,
-    children: <RenderBox>[
-      RenderDots(),
-      paragraph,
-    ],
+    children: <RenderBox>[RenderDots(), paragraph],
   );
   // The "parentData" field of a render object is controlled by the render
   // object's parent render object. Now that we've added the paragraph as a
@@ -132,5 +129,5 @@ void main() {
     ..left = 20.0;
 
   // Finally, we attach the render tree we've built to the screen.
-  RenderingFlutterBinding(root: stack).scheduleFrame();
+  ViewRenderingFlutterBinding(root: stack).scheduleFrame();
 }

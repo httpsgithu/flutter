@@ -8,15 +8,17 @@ import 'package:flutter_driver/driver_extension.dart';
 import 'keys.dart' as keys;
 
 void main() {
-  enableFlutterDriverExtension(handler: (String? message) async {
-    // TODO(cbernaschina): remove when test flakiness is resolved
-    return 'keyboard_resize';
-  });
+  enableFlutterDriverExtension(
+    handler: (String? message) async {
+      // TODO(cbernaschina): remove when test flakiness is resolved
+      return 'keyboard_resize';
+    },
+  );
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +31,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -52,15 +54,19 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
-              return Center(child: Text('${constraints.biggest.height}', key: const Key(keys.kHeightText)));
-            }
+              return Center(
+                child: Text('${constraints.biggest.height}', key: const Key(keys.kHeightText)),
+              );
+            },
           ),
           textField,
         ],
       ),
       floatingActionButton: FloatingActionButton(
         key: const Key(keys.kUnfocusButton),
-        onPressed: () { textField.focusNode!.unfocus(); },
+        onPressed: () {
+          textField.focusNode!.unfocus();
+        },
         tooltip: 'Unfocus',
         child: const Icon(Icons.done),
       ),

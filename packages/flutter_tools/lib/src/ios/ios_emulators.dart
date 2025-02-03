@@ -14,7 +14,7 @@ class IOSEmulators extends EmulatorDiscovery {
   bool get supportsPlatform => globals.platform.isMacOS;
 
   @override
-  bool get canListAnything => globals.iosWorkflow?.canListEmulators == true;
+  bool get canListAnything => globals.iosWorkflow?.canListEmulators ?? false;
 
   @override
   Future<List<Emulator>> get emulators async => getEmulators();
@@ -45,12 +45,7 @@ class IOSEmulator extends Emulator {
       throwToolExit('Could not find Simulator app');
     }
     Future<bool> launchSimulator(List<String> additionalArgs) async {
-      final List<String> args = <String>[
-        'open',
-        ...additionalArgs,
-        '-a',
-        simulatorPath,
-      ];
+      final List<String> args = <String>['open', ...additionalArgs, '-a', simulatorPath];
 
       final RunResult launchResult = await globals.processUtils.run(args);
       if (launchResult.exitCode != 0) {

@@ -2,6 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'package:flutter/widgets.dart';
+///
+/// @docImport 'box_border.dart';
+/// @docImport 'box_decoration.dart';
+library;
 
 import 'package:flutter/foundation.dart';
 
@@ -9,8 +14,8 @@ import 'basic_types.dart';
 
 /// Base class for [BorderRadius] that allows for text-direction aware resolution.
 ///
-/// A property or argument of this type accepts classes created either with [new
-/// BorderRadius.only] and its variants, or [new BorderRadiusDirectional.only]
+/// A property or argument of this type accepts classes created either with [
+/// BorderRadius.only] and its variants, or [BorderRadiusDirectional.only]
 /// and its variants.
 ///
 /// To convert a [BorderRadiusGeometry] object of indeterminate type into a
@@ -130,9 +135,9 @@ abstract class BorderRadiusGeometry {
   ///
   /// {@macro dart.ui.shadow.lerp}
   static BorderRadiusGeometry? lerp(BorderRadiusGeometry? a, BorderRadiusGeometry? b, double t) {
-    assert(t != null);
-    if (a == null && b == null)
-      return null;
+    if (identical(a, b)) {
+      return a;
+    }
     a ??= BorderRadius.zero;
     b ??= BorderRadius.zero;
     return a.add((b.subtract(a)) * t);
@@ -152,9 +157,7 @@ abstract class BorderRadiusGeometry {
   @override
   String toString() {
     String? visual, logical;
-    if (_topLeft == _topRight &&
-        _topRight == _bottomLeft &&
-        _bottomLeft == _bottomRight) {
+    if (_topLeft == _topRight && _topRight == _bottomLeft && _bottomLeft == _bottomRight) {
       if (_topLeft != Radius.zero) {
         if (_topLeft.x == _topLeft.y) {
           visual = 'BorderRadius.circular(${_topLeft.x.toStringAsFixed(1)})';
@@ -172,28 +175,29 @@ abstract class BorderRadiusGeometry {
         comma = true;
       }
       if (_topRight != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('topRight: $_topRight');
         comma = true;
       }
       if (_bottomLeft != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('bottomLeft: $_bottomLeft');
         comma = true;
       }
       if (_bottomRight != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('bottomRight: $_bottomRight');
       }
       result.write(')');
       visual = result.toString();
     }
-    if (_topStart == _topEnd &&
-        _topEnd == _bottomEnd &&
-        _bottomEnd == _bottomStart) {
+    if (_topStart == _topEnd && _topEnd == _bottomEnd && _bottomEnd == _bottomStart) {
       if (_topStart != Radius.zero) {
         if (_topStart.x == _topStart.y) {
           logical = 'BorderRadiusDirectional.circular(${_topStart.x.toStringAsFixed(1)})';
@@ -211,64 +215,64 @@ abstract class BorderRadiusGeometry {
         comma = true;
       }
       if (_topEnd != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('topEnd: $_topEnd');
         comma = true;
       }
       if (_bottomStart != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('bottomStart: $_bottomStart');
         comma = true;
       }
       if (_bottomEnd != Radius.zero) {
-        if (comma)
+        if (comma) {
           result.write(', ');
+        }
         result.write('bottomEnd: $_bottomEnd');
       }
       result.write(')');
       logical = result.toString();
     }
-    if (visual != null && logical != null)
+    if (visual != null && logical != null) {
       return '$visual + $logical';
-    if (visual != null)
-      return visual;
-    if (logical != null)
-      return logical;
-    return 'BorderRadius.zero';
+    }
+    return visual ?? logical ?? 'BorderRadius.zero';
   }
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other))
+    if (identical(this, other)) {
       return true;
-    if (other.runtimeType != runtimeType)
+    }
+    if (other.runtimeType != runtimeType) {
       return false;
-    return other is BorderRadiusGeometry
-        && other._topLeft == _topLeft
-        && other._topRight == _topRight
-        && other._bottomLeft == _bottomLeft
-        && other._bottomRight == _bottomRight
-        && other._topStart == _topStart
-        && other._topEnd == _topEnd
-        && other._bottomStart == _bottomStart
-        && other._bottomEnd == _bottomEnd;
+    }
+    return other is BorderRadiusGeometry &&
+        other._topLeft == _topLeft &&
+        other._topRight == _topRight &&
+        other._bottomLeft == _bottomLeft &&
+        other._bottomRight == _bottomRight &&
+        other._topStart == _topStart &&
+        other._topEnd == _topEnd &&
+        other._bottomStart == _bottomStart &&
+        other._bottomEnd == _bottomEnd;
   }
 
   @override
-  int get hashCode {
-    return hashValues(
-      _topLeft,
-      _topRight,
-      _bottomLeft,
-      _bottomRight,
-      _topStart,
-      _topEnd,
-      _bottomStart,
-      _bottomEnd,
-    );
-  }
+  int get hashCode => Object.hash(
+    _topLeft,
+    _topRight,
+    _bottomLeft,
+    _bottomRight,
+    _topStart,
+    _topEnd,
+    _bottomStart,
+    _bottomEnd,
+  );
 }
 
 /// An immutable set of radii for each corner of a rectangle.
@@ -282,41 +286,21 @@ abstract class BorderRadiusGeometry {
 /// a [TextDirection] (typically obtained from the ambient [Directionality]).
 class BorderRadius extends BorderRadiusGeometry {
   /// Creates a border radius where all radii are [radius].
-  const BorderRadius.all(Radius radius) : this.only(
-    topLeft: radius,
-    topRight: radius,
-    bottomLeft: radius,
-    bottomRight: radius,
-  );
+  const BorderRadius.all(Radius radius)
+    : this.only(topLeft: radius, topRight: radius, bottomLeft: radius, bottomRight: radius);
 
   /// Creates a border radius where all radii are [Radius.circular(radius)].
-  BorderRadius.circular(double radius) : this.all(
-    Radius.circular(radius),
-  );
+  BorderRadius.circular(double radius) : this.all(Radius.circular(radius));
 
   /// Creates a vertically symmetric border radius where the top and bottom
   /// sides of the rectangle have the same radii.
-  const BorderRadius.vertical({
-    Radius top = Radius.zero,
-    Radius bottom = Radius.zero,
-  }) : this.only(
-    topLeft: top,
-    topRight: top,
-    bottomLeft: bottom,
-    bottomRight: bottom,
-  );
+  const BorderRadius.vertical({Radius top = Radius.zero, Radius bottom = Radius.zero})
+    : this.only(topLeft: top, topRight: top, bottomLeft: bottom, bottomRight: bottom);
 
   /// Creates a horizontally symmetrical border radius where the left and right
   /// sides of the rectangle have the same radii.
-  const BorderRadius.horizontal({
-    Radius left = Radius.zero,
-    Radius right = Radius.zero,
-  }) : this.only(
-    topLeft: left,
-    topRight: right,
-    bottomLeft: left,
-    bottomRight: right,
-  );
+  const BorderRadius.horizontal({Radius left = Radius.zero, Radius right = Radius.zero})
+    : this.only(topLeft: left, topRight: right, bottomLeft: left, bottomRight: right);
 
   /// Creates a border radius with only the given non-zero values. The other
   /// corners will be right angles.
@@ -383,27 +367,35 @@ class BorderRadius extends BorderRadiusGeometry {
   Radius get _bottomEnd => Radius.zero;
 
   /// Creates an [RRect] from the current border radius and a [Rect].
+  ///
+  /// If any of the radii have negative values in x or y, those values will be
+  /// clamped to zero in order to produce a valid [RRect].
   RRect toRRect(Rect rect) {
+    // Because the current radii could be negative, we must clamp them before
+    // converting them to an RRect to be rendered, since negative radii on
+    // RRects don't make sense.
     return RRect.fromRectAndCorners(
       rect,
-      topLeft: topLeft,
-      topRight: topRight,
-      bottomLeft: bottomLeft,
-      bottomRight: bottomRight,
+      topLeft: topLeft.clamp(minimum: Radius.zero),
+      topRight: topRight.clamp(minimum: Radius.zero),
+      bottomLeft: bottomLeft.clamp(minimum: Radius.zero),
+      bottomRight: bottomRight.clamp(minimum: Radius.zero),
     );
   }
 
   @override
   BorderRadiusGeometry subtract(BorderRadiusGeometry other) {
-    if (other is BorderRadius)
+    if (other is BorderRadius) {
       return this - other;
+    }
     return super.subtract(other);
   }
 
   @override
   BorderRadiusGeometry add(BorderRadiusGeometry other) {
-    if (other is BorderRadius)
+    if (other is BorderRadius) {
       return this + other;
+    }
     return super.add(other);
   }
 
@@ -490,13 +482,15 @@ class BorderRadius extends BorderRadiusGeometry {
   ///
   /// {@macro dart.ui.shadow.lerp}
   static BorderRadius? lerp(BorderRadius? a, BorderRadius? b, double t) {
-    assert(t != null);
-    if (a == null && b == null)
-      return null;
-    if (a == null)
+    if (identical(a, b)) {
+      return a;
+    }
+    if (a == null) {
       return b! * t;
-    if (b == null)
+    }
+    if (b == null) {
       return a * (1.0 - t);
+    }
     return BorderRadius.only(
       topLeft: Radius.lerp(a.topLeft, b.topLeft, t)!,
       topRight: Radius.lerp(a.topRight, b.topRight, t)!,
@@ -523,41 +517,21 @@ class BorderRadius extends BorderRadiusGeometry {
 ///    `topRight` instead of `topStart` and `topEnd`).
 class BorderRadiusDirectional extends BorderRadiusGeometry {
   /// Creates a border radius where all radii are [radius].
-  const BorderRadiusDirectional.all(Radius radius) : this.only(
-    topStart: radius,
-    topEnd: radius,
-    bottomStart: radius,
-    bottomEnd: radius,
-  );
+  const BorderRadiusDirectional.all(Radius radius)
+    : this.only(topStart: radius, topEnd: radius, bottomStart: radius, bottomEnd: radius);
 
   /// Creates a border radius where all radii are [Radius.circular(radius)].
-  BorderRadiusDirectional.circular(double radius) : this.all(
-    Radius.circular(radius),
-  );
+  BorderRadiusDirectional.circular(double radius) : this.all(Radius.circular(radius));
 
   /// Creates a vertically symmetric border radius where the top and bottom
   /// sides of the rectangle have the same radii.
-  const BorderRadiusDirectional.vertical({
-    Radius top = Radius.zero,
-    Radius bottom = Radius.zero,
-  }) : this.only(
-    topStart: top,
-    topEnd: top,
-    bottomStart: bottom,
-    bottomEnd: bottom,
-  );
+  const BorderRadiusDirectional.vertical({Radius top = Radius.zero, Radius bottom = Radius.zero})
+    : this.only(topStart: top, topEnd: top, bottomStart: bottom, bottomEnd: bottom);
 
   /// Creates a horizontally symmetrical border radius where the start and end
   /// sides of the rectangle have the same radii.
-  const BorderRadiusDirectional.horizontal({
-    Radius start = Radius.zero,
-    Radius end = Radius.zero,
-  }) : this.only(
-    topStart: start,
-    topEnd: end,
-    bottomStart: start,
-    bottomEnd: end,
-  );
+  const BorderRadiusDirectional.horizontal({Radius start = Radius.zero, Radius end = Radius.zero})
+    : this.only(topStart: start, topEnd: end, bottomStart: start, bottomEnd: end);
 
   /// Creates a border radius with only the given non-zero values. The other
   /// corners will be right angles.
@@ -570,7 +544,7 @@ class BorderRadiusDirectional extends BorderRadiusGeometry {
 
   /// A border radius with all zero radii.
   ///
-  /// Consider using [EdgeInsets.zero] instead, since that object has the same
+  /// Consider using [BorderRadius.zero] instead, since that object has the same
   /// effect, but will be cheaper to [resolve].
   static const BorderRadiusDirectional zero = BorderRadiusDirectional.all(Radius.zero);
 
@@ -612,15 +586,17 @@ class BorderRadiusDirectional extends BorderRadiusGeometry {
 
   @override
   BorderRadiusGeometry subtract(BorderRadiusGeometry other) {
-    if (other is BorderRadiusDirectional)
+    if (other is BorderRadiusDirectional) {
       return this - other;
+    }
     return super.subtract(other);
   }
 
   @override
   BorderRadiusGeometry add(BorderRadiusGeometry other) {
-    if (other is BorderRadiusDirectional)
+    if (other is BorderRadiusDirectional) {
       return this + other;
+    }
     return super.add(other);
   }
 
@@ -706,14 +682,20 @@ class BorderRadiusDirectional extends BorderRadiusGeometry {
   /// If either is null, this function interpolates from [BorderRadiusDirectional.zero].
   ///
   /// {@macro dart.ui.shadow.lerp}
-  static BorderRadiusDirectional? lerp(BorderRadiusDirectional? a, BorderRadiusDirectional? b, double t) {
-    assert(t != null);
-    if (a == null && b == null)
-      return null;
-    if (a == null)
+  static BorderRadiusDirectional? lerp(
+    BorderRadiusDirectional? a,
+    BorderRadiusDirectional? b,
+    double t,
+  ) {
+    if (identical(a, b)) {
+      return a;
+    }
+    if (a == null) {
       return b! * t;
-    if (b == null)
+    }
+    if (b == null) {
       return a * (1.0 - t);
+    }
     return BorderRadiusDirectional.only(
       topStart: Radius.lerp(a.topStart, b.topStart, t)!,
       topEnd: Radius.lerp(a.topEnd, b.topEnd, t)!,

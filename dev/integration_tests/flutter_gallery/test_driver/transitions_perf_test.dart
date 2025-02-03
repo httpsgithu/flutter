@@ -13,7 +13,15 @@ import 'package:test/test.dart' hide TypeMatcher, isInstanceOf;
 
 const FileSystem _fs = LocalFileSystem();
 
-const List<String> kSkippedDemos = <String>[];
+/// The demos we don't run as part of the integration test.
+///
+/// Demo names are formatted as 'DEMO_NAME@DEMO_CATEGORY' (see
+/// `demo_lists.dart` for more examples).
+const List<String> kSkippedDemos = <String>[
+  // This demo is flaky on CI due to hitting the network.
+  // See: https://github.com/flutter/flutter/issues/100497
+  'Video@Media',
+];
 
 // All of the gallery demos, identified as "title@category".
 //
@@ -52,8 +60,9 @@ Future<void> saveDurationsHistogram(List<Map<String, dynamic>> events, String ou
   }
 
   // Verify that the durations data is valid.
-  if (durations.keys.isEmpty)
+  if (durations.keys.isEmpty) {
     throw 'no "Start Transition" timeline events found';
+  }
   final Map<String, int> unexpectedValueCounts = <String, int>{};
   durations.forEach((String routeName, List<int> values) {
     if (values.length != 2) {
@@ -62,7 +71,9 @@ Future<void> saveDurationsHistogram(List<Map<String, dynamic>> events, String ou
   });
 
   if (unexpectedValueCounts.isNotEmpty) {
-    final StringBuffer error = StringBuffer('Some routes recorded wrong number of values (expected 2 values/route):\n\n');
+    final StringBuffer error = StringBuffer(
+      'Some routes recorded wrong number of values (expected 2 values/route):\n\n',
+    );
     // When run with --trace-startup, the VM stores trace events in an endless buffer instead of a ring buffer.
     error.write('You must add the --trace-startup parameter to run the test. \n\n');
     unexpectedValueCounts.forEach((String routeName, int count) {
@@ -75,12 +86,14 @@ Future<void> saveDurationsHistogram(List<Map<String, dynamic>> events, String ou
     while (eventIter.moveNext()) {
       final String eventName = eventIter.current['name'] as String;
 
-      if (!<String>['Start Transition', 'Frame'].contains(eventName))
+      if (!<String>['Start Transition', 'Frame'].contains(eventName)) {
         continue;
+      }
 
-      final String routeName = eventName == 'Start Transition'
-        ? (eventIter.current['args'] as Map<String, dynamic>)['to'] as String
-        : '';
+      final String routeName =
+          eventName == 'Start Transition'
+              ? (eventIter.current['args'] as Map<String, dynamic>)['to'] as String
+              : '';
 
       if (eventName == lastEventName && routeName == lastRouteName) {
         error.write('.');
@@ -106,8 +119,9 @@ Future<void> runDemos(List<String> demos, FlutterDriver driver) async {
   String? currentDemoCategory;
 
   for (final String demo in demos) {
-    if (kSkippedDemos.contains(demo))
+    if (kSkippedDemos.contains(demo)) {
       continue;
+    }
 
     final String demoName = demo.substring(0, demo.indexOf('@'));
     final String demoCategory = demo.substring(demo.indexOf('@') + 1);
@@ -127,10 +141,7 @@ Future<void> runDemos(List<String> demos, FlutterDriver driver) async {
     currentDemoCategory = demoCategory;
 
     final SerializableFinder demoItem = find.text(demoName);
-    await driver.scrollUntilVisible(demoList, demoItem,
-      dyScroll: -48.0,
-      alignment: 0.5,
-    );
+    await driver.scrollUntilVisible(demoList, demoItem, dyScroll: -48.0, alignment: 0.5);
 
     for (int i = 0; i < 2; i += 1) {
       await driver.tap(demoItem); // Launch the demo
@@ -167,22 +178,27 @@ void main([List<String> args = const <String>[]]) {
       }
 
       // See _handleMessages() in transitions_perf.dart.
-      _allDemos = List<String>.from(json.decode(await driver.requestData('demoNames')) as List<dynamic>);
-      if (_allDemos.isEmpty)
+      _allDemos = List<String>.from(
+        json.decode(await driver.requestData('demoNames')) as List<dynamic>,
+      );
+      if (_allDemos.isEmpty) {
         throw 'no demo names found';
+      }
     });
 
     tearDownAll(() async {
-        await driver.close();
+      await driver.close();
     });
 
-    test('find.bySemanticsLabel', () async {
-      // Assert that we can use semantics related finders in profile mode.
-      final int id = await driver.getSemanticsId(find.bySemanticsLabel('Material'));
-      expect(id, greaterThan(-1));
-    },
-        skip: !withSemantics, // [intended] test only makes sense when semantics are turned on.
-        timeout: Timeout.none,
+    test(
+      'find.bySemanticsLabel',
+      () async {
+        // Assert that we can use semantics related finders in profile mode.
+        final int id = await driver.getSemanticsId(find.bySemanticsLabel('Material'));
+        expect(id, greaterThan(-1));
+      },
+      skip: !withSemantics, // [intended] test only makes sense when semantics are turned on.
+      timeout: Timeout.none,
     );
 
     test('all demos', () async {
@@ -200,6 +216,7 @@ void main([List<String> args = const <String>[]]) {
           TimelineStream.embedder,
           TimelineStream.gc,
         ],
+        retainPriorEvents: true,
       );
 
       // Save the duration (in microseconds) of the first timeline Frame event
@@ -207,10 +224,14 @@ void main([List<String> args = const <String>[]]) {
       // 'Start Transition' event when a demo is launched (see GalleryItem).
       final TimelineSummary summary = TimelineSummary.summarize(timeline);
       await summary.writeTimelineToFile('transitions', pretty: true);
-      final String histogramPath = path.join(testOutputsDirectory, 'transition_durations.timeline.json');
+      final String histogramPath = path.join(
+        testOutputsDirectory,
+        'transition_durations.timeline.json',
+      );
       await saveDurationsHistogram(
-          List<Map<String, dynamic>>.from(timeline.json['traceEvents'] as List<dynamic>),
-          histogramPath);
+        List<Map<String, dynamic>>.from(timeline.json['traceEvents'] as List<dynamic>),
+        histogramPath,
+      );
 
       // Execute the remaining tests.
       if (hybrid) {
@@ -219,7 +240,6 @@ void main([List<String> args = const <String>[]]) {
         final Set<String> unprofiledDemos = Set<String>.from(_allDemos)..removeAll(kProfiledDemos);
         await runDemos(unprofiledDemos.toList(), driver);
       }
-
     }, timeout: Timeout.none);
   });
 }

@@ -16,6 +16,13 @@ void main() {
     expect(log[1], contains('debugPrintStack'));
   });
 
+  test('should show message of ErrorDescription', () {
+    const String descriptionMessage = 'This is the message';
+    final ErrorDescription errorDescription = ErrorDescription(descriptionMessage);
+
+    expect(errorDescription.toString(), descriptionMessage);
+  });
+
   test('debugPrintStack', () {
     final List<String> log = captureOutput(() {
       final FlutterErrorDetails details = FlutterErrorDetails(
@@ -51,24 +58,9 @@ void main() {
           yield ErrorDescription('INFO');
         },
       ).toString(),
-        '══╡ EXCEPTION CAUGHT BY LIBRARY ╞════════════════════════════════\n'
-        'The following message was thrown CONTEXTING:\n'
-        'MESSAGE\n'
-        '\n'
-        'INFO\n'
-        '═════════════════════════════════════════════════════════════════\n',
-    );
-    expect(
-      FlutterErrorDetails(
-        exception: NullThrownError(),
-        library: 'LIBRARY',
-        context: ErrorDescription('CONTEXTING'),
-        informationCollector: () sync* {
-          yield ErrorDescription('INFO');
-        },
-      ).toString(),
       '══╡ EXCEPTION CAUGHT BY LIBRARY ╞════════════════════════════════\n'
-      'The null value was thrown CONTEXTING.\n'
+      'The following message was thrown CONTEXTING:\n'
+      'MESSAGE\n'
       '\n'
       'INFO\n'
       '═════════════════════════════════════════════════════════════════\n',
@@ -81,12 +73,12 @@ void main() {
           yield ErrorDescription('INFO');
         },
       ).toString(),
-        '══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞══════════════════════\n'
-        'The following message was thrown CONTEXTING:\n'
-        'MESSAGE\n'
-        '\n'
-        'INFO\n'
-        '═════════════════════════════════════════════════════════════════\n',
+      '══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞══════════════════════\n'
+      'The following message was thrown CONTEXTING:\n'
+      'MESSAGE\n'
+      '\n'
+      'INFO\n'
+      '═════════════════════════════════════════════════════════════════\n',
     );
     expect(
       FlutterErrorDetails(
@@ -104,33 +96,25 @@ void main() {
       '═════════════════════════════════════════════════════════════════\n',
     );
     expect(
-      const FlutterErrorDetails(
-        exception: 'MESSAGE',
-      ).toString(),
+      const FlutterErrorDetails(exception: 'MESSAGE').toString(),
       '══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞══════════════════════\n'
       'The following message was thrown:\n'
       'MESSAGE\n'
-      '═════════════════════════════════════════════════════════════════\n',
-    );
-    expect(
-      FlutterErrorDetails(exception: NullThrownError()).toString(),
-      '══╡ EXCEPTION CAUGHT BY FLUTTER FRAMEWORK ╞══════════════════════\n'
-      'The null value was thrown.\n'
       '═════════════════════════════════════════════════════════════════\n',
     );
   });
 
   test('FlutterErrorDetails.toStringShort', () {
     expect(
-        FlutterErrorDetails(
-          exception: 'MESSAGE',
-          library: 'library',
-          context: ErrorDescription('CONTEXTING'),
-          informationCollector: () sync* {
-            yield ErrorDescription('INFO');
-          },
-        ).toStringShort(),
-        'Exception caught by library',
+      FlutterErrorDetails(
+        exception: 'MESSAGE',
+        library: 'library',
+        context: ErrorDescription('CONTEXTING'),
+        informationCollector: () sync* {
+          yield ErrorDescription('INFO');
+        },
+      ).toStringShort(),
+      'Exception caught by library',
     );
   });
 
@@ -256,7 +240,7 @@ void main() {
         'This error should still help you solve your problem, however\n'
         'please also report this malformed error in the framework by\n'
         'filing a bug on GitHub:\n'
-        '  https://github.com/flutter/flutter/issues/new?template=2_bug.md\n'
+        '  https://github.com/flutter/flutter/issues/new?template=2_bug.yml\n'
         '═════════════════════════════════════════════════════════════════\n',
       );
     }
@@ -293,7 +277,7 @@ void main() {
         'This error should still help you solve your problem, however\n'
         'please also report this malformed error in the framework by\n'
         'filing a bug on GitHub:\n'
-        '  https://github.com/flutter/flutter/issues/new?template=2_bug.md\n'
+        '  https://github.com/flutter/flutter/issues/new?template=2_bug.yml\n'
         '═════════════════════════════════════════════════════════════════\n',
       );
     }
@@ -322,7 +306,7 @@ void main() {
         'This error should still help you solve your problem, however\n'
         'please also report this malformed error in the framework by\n'
         'filing a bug on GitHub:\n'
-        '  https://github.com/flutter/flutter/issues/new?template=2_bug.md\n'
+        '  https://github.com/flutter/flutter/issues/new?template=2_bug.yml\n'
         '═════════════════════════════════════════════════════════════════\n',
       );
     }
@@ -422,7 +406,7 @@ void main() {
       'provide substantially more information in this error message to help you determine '
       'and fix the underlying cause.\n'
       'In either case, please report this assertion by filing a bug on GitHub:\n'
-      '  https://github.com/flutter/flutter/issues/new?template=2_bug.md',
+      '  https://github.com/flutter/flutter/issues/new?template=2_bug.yml',
     );
     expect(builder.properties[4] is ErrorSpacer, true);
     final DiagnosticsStackTrace trace = builder.properties[5] as DiagnosticsStackTrace;
@@ -433,20 +417,49 @@ void main() {
   test('RepetitiveStackFrameFilter does not go out of range', () {
     const RepetitiveStackFrameFilter filter = RepetitiveStackFrameFilter(
       frames: <PartialStackFrame>[
-        PartialStackFrame(className: 'TestClass', method: 'test1', package: 'package:test/blah.dart'),
-        PartialStackFrame(className: 'TestClass', method: 'test2', package: 'package:test/blah.dart'),
-        PartialStackFrame(className: 'TestClass', method: 'test3', package: 'package:test/blah.dart'),
+        PartialStackFrame(
+          className: 'TestClass',
+          method: 'test1',
+          package: 'package:test/blah.dart',
+        ),
+        PartialStackFrame(
+          className: 'TestClass',
+          method: 'test2',
+          package: 'package:test/blah.dart',
+        ),
+        PartialStackFrame(
+          className: 'TestClass',
+          method: 'test3',
+          package: 'package:test/blah.dart',
+        ),
       ],
       replacement: 'test',
     );
     final List<String?> reasons = List<String?>.filled(2, null);
-    filter.filter(
-      const <StackFrame>[
-        StackFrame(className: 'TestClass', method: 'test1', packageScheme: 'package', package: 'test', packagePath: 'blah.dart', line: 1, column: 1, number: 0, source: ''),
-        StackFrame(className: 'TestClass', method: 'test2', packageScheme: 'package', package: 'test', packagePath: 'blah.dart', line: 1, column: 1, number: 0, source: ''),
-      ],
-      reasons,
-    );
+    filter.filter(const <StackFrame>[
+      StackFrame(
+        className: 'TestClass',
+        method: 'test1',
+        packageScheme: 'package',
+        package: 'test',
+        packagePath: 'blah.dart',
+        line: 1,
+        column: 1,
+        number: 0,
+        source: '',
+      ),
+      StackFrame(
+        className: 'TestClass',
+        method: 'test2',
+        packageScheme: 'package',
+        package: 'test',
+        packagePath: 'blah.dart',
+        line: 1,
+        column: 1,
+        number: 0,
+        source: '',
+      ),
+    ], reasons);
     expect(reasons, List<String?>.filled(2, null));
   });
 }

@@ -11,11 +11,8 @@ import 'framework.dart';
 /// `animation` and wrapping the provided `child`.
 ///
 /// The `animation` provided to the builder always runs forward from 0.0 to 1.0.
-typedef AnimatedTransitionBuilder = Widget Function(
-  BuildContext context,
-  Animation<double> animation,
-  Widget? child,
-);
+typedef AnimatedTransitionBuilder =
+    Widget Function(BuildContext context, Animation<double> animation, Widget? child);
 
 /// A transition builder that animates its [child] based on the
 /// [AnimationStatus] of the provided [animation].
@@ -32,19 +29,13 @@ typedef AnimatedTransitionBuilder = Widget Function(
 /// any descendant widget is lost when the transition starts or completes.
 class DualTransitionBuilder extends StatefulWidget {
   /// Creates a [DualTransitionBuilder].
-  ///
-  /// The [animation], [forwardBuilder], and [reverseBuilder] arguments are
-  /// required and must not be null.
   const DualTransitionBuilder({
-    Key? key,
+    super.key,
     required this.animation,
     required this.forwardBuilder,
     required this.reverseBuilder,
     this.child,
-  }) : assert(animation != null),
-       assert(forwardBuilder != null),
-       assert(reverseBuilder != null),
-       super(key: key);
+  });
 
   /// The animation that drives the [child]'s transition.
   ///
@@ -135,8 +126,6 @@ class _DualTransitionBuilderState extends State<DualTransitionBuilder> {
     required AnimationStatus lastEffective,
     required AnimationStatus current,
   }) {
-    assert(current != null);
-    assert(lastEffective != null);
     switch (current) {
       case AnimationStatus.dismissed:
       case AnimationStatus.completed:
@@ -168,12 +157,10 @@ class _DualTransitionBuilderState extends State<DualTransitionBuilder> {
       case AnimationStatus.forward:
         _forwardAnimation.parent = widget.animation;
         _reverseAnimation.parent = kAlwaysDismissedAnimation;
-        break;
       case AnimationStatus.reverse:
       case AnimationStatus.completed:
         _forwardAnimation.parent = kAlwaysCompleteAnimation;
         _reverseAnimation.parent = ReverseAnimation(widget.animation);
-        break;
     }
   }
 
@@ -188,11 +175,7 @@ class _DualTransitionBuilderState extends State<DualTransitionBuilder> {
     return widget.forwardBuilder(
       context,
       _forwardAnimation,
-      widget.reverseBuilder(
-        context,
-        _reverseAnimation,
-        widget.child,
-      ),
+      widget.reverseBuilder(context, _reverseAnimation, widget.child),
     );
   }
 }

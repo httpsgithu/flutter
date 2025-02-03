@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+/// @docImport 'ink_well.dart';
+library;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
@@ -24,7 +27,7 @@ import 'material_state.dart';
 ///
 /// ```dart
 /// class MyWidget extends StatefulWidget {
-///   const MyWidget({required this.color, required this.child, Key? key}) : super(key: key);
+///   const MyWidget({super.key, required this.color, required this.child});
 ///
 ///   final MaterialStateColor color;
 ///   final Widget child;
@@ -38,7 +41,7 @@ import 'material_state.dart';
 ///   Widget build(BuildContext context) {
 ///     return InkWell(
 ///       onFocusChange: updateMaterialState(MaterialState.focused),
-///       child: Container(
+///       child: ColoredBox(
 ///         color: widget.color.resolve(materialStates),
 ///         child: widget.child,
 ///       ),
@@ -76,7 +79,7 @@ mixin MaterialStateMixin<T extends StatefulWidget> on State<T> {
   ///
   /// ```dart
   /// class MyWidget extends StatefulWidget {
-  ///   const MyWidget({this.onPressed, Key? key}) : super(key: key);
+  ///   const MyWidget({super.key, this.onPressed});
   ///
   ///   /// Something important this widget must do when pressed.
   ///   final VoidCallback? onPressed;
@@ -88,7 +91,7 @@ mixin MaterialStateMixin<T extends StatefulWidget> on State<T> {
   /// class MyWidgetState extends State<MyWidget> with MaterialStateMixin<MyWidget> {
   ///   @override
   ///   Widget build(BuildContext context) {
-  ///     return Container(
+  ///     return ColoredBox(
   ///       color: isPressed ? Colors.black : Colors.white,
   ///       child: InkWell(
   ///         onHighlightChanged: updateMaterialState(
@@ -108,8 +111,9 @@ mixin MaterialStateMixin<T extends StatefulWidget> on State<T> {
   @protected
   ValueChanged<bool> updateMaterialState(MaterialState key, {ValueChanged<bool>? onChanged}) {
     return (bool value) {
-      if (materialStates.contains(key) == value)
+      if (materialStates.contains(key) == value) {
         return;
+      }
       setMaterialState(key, value);
       onChanged?.call(value);
     };
@@ -117,22 +121,24 @@ mixin MaterialStateMixin<T extends StatefulWidget> on State<T> {
 
   /// Mutator to mark a [MaterialState] value as either active or inactive.
   @protected
-  void setMaterialState(MaterialState _state, bool isSet) {
-    return isSet ? addMaterialState(_state) : removeMaterialState(_state);
+  void setMaterialState(MaterialState state, bool isSet) {
+    return isSet ? addMaterialState(state) : removeMaterialState(state);
   }
 
   /// Mutator to mark a [MaterialState] value as active.
   @protected
-  void addMaterialState(MaterialState _state) {
-    if (materialStates.add(_state))
-      setState((){});
+  void addMaterialState(MaterialState state) {
+    if (materialStates.add(state)) {
+      setState(() {});
+    }
   }
 
   /// Mutator to mark a [MaterialState] value as inactive.
   @protected
-  void removeMaterialState(MaterialState _state) {
-    if (materialStates.remove(_state))
-      setState((){});
+  void removeMaterialState(MaterialState state) {
+    if (materialStates.remove(state)) {
+      setState(() {});
+    }
   }
 
   /// Getter for whether this class considers [MaterialState.disabled] to be active.
@@ -162,6 +168,12 @@ mixin MaterialStateMixin<T extends StatefulWidget> on State<T> {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<Set<MaterialState>>('materialStates', materialStates, defaultValue: <MaterialState>{}));
+    properties.add(
+      DiagnosticsProperty<Set<MaterialState>>(
+        'materialStates',
+        materialStates,
+        defaultValue: <MaterialState>{},
+      ),
+    );
   }
 }

@@ -25,6 +25,7 @@
 /// about any additional exports that you add to this file, as doing so will
 /// increase the API surface that we have to test in Flutter tools, and the APIs
 /// in `dart:io` can sometimes be hard to use in tests.
+library;
 
 // We allow `print()` in this file as a fallback for writing to the terminal via
 // regular stdout/stderr/stdio paths. Everything else in the flutter_tools
@@ -32,24 +33,25 @@
 // ignore_for_file: avoid_print
 
 import 'dart:async';
-import 'dart:io' as io
-  show
-    exit,
-    InternetAddress,
-    InternetAddressType,
-    IOSink,
-    NetworkInterface,
-    pid,
-    Process,
-    ProcessInfo,
-    ProcessSignal,
-    stderr,
-    stdin,
-    Stdin,
-    StdinException,
-    Stdout,
-    StdoutException,
-    stdout;
+import 'dart:io'
+    as io
+    show
+        IOSink,
+        InternetAddress,
+        InternetAddressType,
+        NetworkInterface,
+        Process,
+        ProcessInfo,
+        ProcessSignal,
+        Stdin,
+        StdinException,
+        Stdout,
+        StdoutException,
+        exit,
+        pid,
+        stderr,
+        stdin,
+        stdout;
 
 import 'package:file/file.dart';
 import 'package:meta/meta.dart';
@@ -63,10 +65,8 @@ export 'dart:io'
         BytesBuilder,
         CompressionOptions,
         // Directory,         NO! Use `file_system.dart`
-        exitCode,
         // File,              NO! Use `file_system.dart`
         // FileSystemEntity,  NO! Use `file_system.dart`
-        gzip,
         GZipCodec,
         HandshakeException,
         HttpClient,
@@ -79,14 +79,13 @@ export 'dart:io'
         HttpResponse,
         HttpServer,
         HttpStatus,
-        InternetAddress,
-        InternetAddressType,
         IOException,
         IOSink,
+        InternetAddress,
+        InternetAddressType,
         // Link              NO! Use `file_system.dart`
         // NetworkInterface  NO! Use `io.dart`
         OSError,
-        pid,
         // Platform          NO! use `platform.dart`
         Process,
         ProcessException,
@@ -95,21 +94,25 @@ export 'dart:io'
         // ProcessSignal     NO! Use [ProcessSignal] below.
         ProcessStartMode,
         // RandomAccessFile  NO! Use `file_system.dart`
+        SecurityContext,
         ServerSocket,
         SignalException,
-        // stderr,           NO! Use `io.dart`
-        // stdin,            NO! Use `io.dart`
-        Stdin,
-        StdinException,
-        // stdout,           NO! Use `io.dart`
-        Stdout,
         Socket,
         SocketException,
-        systemEncoding,
+        Stdin,
+        StdinException,
+        Stdout,
         WebSocket,
         WebSocketException,
         WebSocketTransformer,
-        ZLibEncoder;
+        ZLibEncoder,
+        exitCode,
+        gzip,
+        pid,
+        // stderr,           NO! Use `io.dart`
+        // stdin,            NO! Use `io.dart`
+        // stdout,           NO! Use `io.dart`
+        systemEncoding;
 
 /// Exits the process with the given [exitCode].
 typedef ExitFunction = void Function(int exitCode);
@@ -145,10 +148,12 @@ bool _inUnitTest() {
 /// Sets the [exit] function to a function that throws an exception rather
 /// than exiting the process; this is intended for testing purposes.
 @visibleForTesting
-void setExitFunctionForTests([ ExitFunction? exitFunction ]) {
-  _exitFunction = exitFunction ?? (int exitCode) {
-    throw ProcessExit(exitCode, immediate: true);
-  };
+void setExitFunctionForTests([ExitFunction? exitFunction]) {
+  _exitFunction =
+      exitFunction ??
+      (int exitCode) {
+        throw ProcessExit(exitCode, immediate: true);
+      };
 }
 
 /// Restores the [exit] function to the `dart:io` implementation.
@@ -169,9 +174,12 @@ void restoreExitFunction() {
 /// [ProcessSignal] instances are available on this class (e.g. "send").
 class ProcessSignal {
   @visibleForTesting
-  const ProcessSignal(this._delegate, {@visibleForTesting Platform platform = const LocalPlatform()})
-    : _platform = platform;
+  const ProcessSignal(
+    this._delegate, {
+    @visibleForTesting Platform platform = const LocalPlatform(),
+  }) : _platform = platform;
 
+  static const ProcessSignal sighup = PosixProcessSignal(io.ProcessSignal.sighup);
   static const ProcessSignal sigwinch = PosixProcessSignal(io.ProcessSignal.sigwinch);
   static const ProcessSignal sigterm = PosixProcessSignal(io.ProcessSignal.sigterm);
   static const ProcessSignal sigusr1 = PosixProcessSignal(io.ProcessSignal.sigusr1);
@@ -190,13 +198,25 @@ class ProcessSignal {
   ///
   /// Returns true if the signal was delivered, false otherwise.
   ///
-  /// On Windows, this can only be used with [ProcessSignal.sigterm], which
-  /// terminates the process.
+  /// On Windows, this can only be used with [sigterm], which terminates the
+  /// process.
   ///
-  /// This is implemented by sending the signal using [Process.killPid].
+  /// This is implemented by sending the signal using [io.Process.killPid] and
+  /// therefore cannot be faked in tests. To fake sending signals in tests, use
+  /// [kill] instead.
   bool send(int pid) {
     assert(!_platform.isWindows || this == ProcessSignal.sigterm);
     return io.Process.killPid(pid, _delegate);
+  }
+
+  /// A more testable variant of [send].
+  ///
+  /// Sends this signal to the given `process` by invoking [io.Process.kill].
+  ///
+  /// In tests this method can be faked by passing a fake implementation of the
+  /// [io.Process] interface.
+  bool kill(io.Process process) {
+    return process.kill(_delegate);
   }
 
   @override
@@ -208,9 +228,7 @@ class ProcessSignal {
 /// Listening to a [_PosixProcessSignal] is a no-op on Windows.
 @visibleForTesting
 class PosixProcessSignal extends ProcessSignal {
-
-  const PosixProcessSignal(io.ProcessSignal wrappedSignal, {@visibleForTesting Platform platform = const LocalPlatform()})
-    : super(wrappedSignal, platform: platform);
+  const PosixProcessSignal(super.wrappedSignal, {@visibleForTesting super.platform});
 
   @override
   Stream<ProcessSignal> watch() {
@@ -231,7 +249,7 @@ class PosixProcessSignal extends ProcessSignal {
 ///   * by throwing an exception asynchronously, and
 ///   * by completing the Future stdout.done with an error.
 ///
-/// This class enapsulates all three so that we don't have to worry about it
+/// This class encapsulates all three so that we don't have to worry about it
 /// anywhere else.
 class Stdio {
   Stdio();
@@ -239,10 +257,9 @@ class Stdio {
   /// Tests can provide overrides to use instead of the stdout and stderr from
   /// dart:io.
   @visibleForTesting
-  Stdio.test({
-    required io.Stdout stdout,
-    required io.IOSink stderr,
-  }) : _stdoutOverride = stdout, _stderrOverride = stderr;
+  Stdio.test({required io.Stdout stdout, required io.IOSink stderr})
+    : _stdoutOverride = stdout,
+      _stderrOverride = stderr;
 
   io.Stdout? _stdoutOverride;
   io.IOSink? _stderrOverride;
@@ -261,25 +278,34 @@ class Stdio {
     }
     _stdout = _stdoutOverride ?? io.stdout;
     _stdout!.done.then(
-      (void _) { _stdoutDone = true; },
-      onError: (Object err, StackTrace st) { _stdoutDone = true; },
+      (void _) {
+        _stdoutDone = true;
+      },
+      onError: (Object err, StackTrace st) {
+        _stdoutDone = true;
+      },
     );
     return _stdout!;
   }
+
   io.Stdout? _stdout;
 
-  @visibleForTesting
   io.IOSink get stderr {
     if (_stderr != null) {
       return _stderr!;
     }
     _stderr = _stderrOverride ?? io.stderr;
     _stderr!.done.then(
-      (void _) { _stderrDone = true; },
-      onError: (Object err, StackTrace st) { _stderrDone = true; },
+      (void _) {
+        _stderrDone = true;
+      },
+      onError: (Object err, StackTrace st) {
+        _stderrDone = true;
+      },
     );
     return _stderr!;
   }
+
   io.IOSink? _stderr;
 
   bool get hasTerminal => io.stdout.hasTerminal;
@@ -319,51 +345,46 @@ class Stdio {
 
   /// Writes [message] to [stderr], falling back on [fallback] if the write
   /// throws any exception. The default fallback calls [print] on [message].
-  void stderrWrite(
-    String message, {
-    void Function(String, dynamic, StackTrace)? fallback,
-  }) {
+  void stderrWrite(String message, {void Function(String, dynamic, StackTrace)? fallback}) {
     if (!_stderrDone) {
       _stdioWrite(stderr, message, fallback: fallback);
       return;
     }
-    fallback == null ? print(message) : fallback(
-      message,
-      const io.StdoutException('stderr is done'),
-      StackTrace.current,
-    );
+    fallback == null
+        ? print(message)
+        : fallback(message, const io.StdoutException('stderr is done'), StackTrace.current);
   }
 
   /// Writes [message] to [stdout], falling back on [fallback] if the write
   /// throws any exception. The default fallback calls [print] on [message].
-  void stdoutWrite(
-    String message, {
-    void Function(String, dynamic, StackTrace)? fallback,
-  }) {
+  void stdoutWrite(String message, {void Function(String, dynamic, StackTrace)? fallback}) {
     if (!_stdoutDone) {
       _stdioWrite(stdout, message, fallback: fallback);
       return;
     }
-    fallback == null ? print(message) : fallback(
-      message,
-      const io.StdoutException('stdout is done'),
-      StackTrace.current,
-    );
+    fallback == null
+        ? print(message)
+        : fallback(message, const io.StdoutException('stdout is done'), StackTrace.current);
   }
 
   // Helper for [stderrWrite] and [stdoutWrite].
-  void _stdioWrite(io.IOSink sink, String message, {
+  void _stdioWrite(
+    io.IOSink sink,
+    String message, {
     void Function(String, dynamic, StackTrace)? fallback,
   }) {
-    asyncGuard<void>(() async {
-      sink.write(message);
-    }, onError: (Object error, StackTrace stackTrace) {
-      if (fallback == null) {
-        print(message);
-      } else {
-        fallback(message, error, stackTrace);
-      }
-    });
+    asyncGuard<void>(
+      () async {
+        sink.write(message);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (fallback == null) {
+          print(message);
+        } else {
+          fallback(message, error, stackTrace);
+        }
+      },
+    );
   }
 
   /// Adds [stream] to [stdout].
@@ -375,9 +396,9 @@ class Stdio {
 
 /// An overridable version of io.ProcessInfo.
 abstract class ProcessInfo {
-  factory ProcessInfo(FileSystem fs) => _DefaultProcessInfo(fs);
+  factory ProcessInfo(FileSystem fs) = _DefaultProcessInfo;
 
-  factory ProcessInfo.test(FileSystem fs) => _TestProcessInfo(fs);
+  factory ProcessInfo.test(FileSystem fs) = _TestProcessInfo;
 
   int get currentRss;
 
@@ -400,9 +421,7 @@ class _DefaultProcessInfo implements ProcessInfo {
 
   @override
   File writePidFile(String pidFile) {
-    assert(pidFile != null);
-    return _fileSystem.file(pidFile)
-      ..writeAsStringSync(io.pid.toString());
+    return _fileSystem.file(pidFile)..writeAsStringSync(io.pid.toString());
   }
 }
 
@@ -420,9 +439,7 @@ class _TestProcessInfo implements ProcessInfo {
 
   @override
   File writePidFile(String pidFile) {
-    assert(pidFile != null);
-    return _fileSystem.file(pidFile)
-      ..writeAsStringSync('12345');
+    return _fileSystem.file(pidFile)..writeAsStringSync('12345');
   }
 }
 
@@ -445,11 +462,12 @@ class NetworkInterface implements io.NetworkInterface {
   String toString() => "NetworkInterface('$name', $addresses)";
 }
 
-typedef NetworkInterfaceLister = Future<List<NetworkInterface>> Function({
-  bool includeLoopback,
-  bool includeLinkLocal,
-  io.InternetAddressType type,
-});
+typedef NetworkInterfaceLister =
+    Future<List<NetworkInterface>> Function({
+      bool includeLoopback,
+      bool includeLinkLocal,
+      io.InternetAddressType type,
+    });
 
 NetworkInterfaceLister? _networkInterfaceListerOverride;
 
@@ -484,7 +502,5 @@ Future<List<NetworkInterface>> listNetworkInterfaces({
     includeLinkLocal: includeLinkLocal,
     type: type,
   );
-  return interfaces.map(
-    (io.NetworkInterface interface) => NetworkInterface(interface),
-  ).toList();
+  return interfaces.map((io.NetworkInterface interface) => NetworkInterface(interface)).toList();
 }

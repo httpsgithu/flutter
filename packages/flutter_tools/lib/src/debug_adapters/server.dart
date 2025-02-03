@@ -21,8 +21,8 @@ import 'flutter_test_adapter.dart';
 /// adapters.
 class DapServer {
   DapServer(
-    Stream<List<int>> _input,
-    StreamSink<List<int>> _output, {
+    Stream<List<int>> input,
+    StreamSink<List<int>> output, {
     required FileSystem fileSystem,
     required Platform platform,
     this.ipv6 = false,
@@ -30,21 +30,29 @@ class DapServer {
     this.enableAuthCodes = true,
     bool test = false,
     this.logger,
-  }) : channel = ByteStreamServerChannel(_input, _output, logger) {
-    adapter = test
-        ? FlutterTestDebugAdapter(channel,
-            fileSystem: fileSystem,
-            platform: platform,
-            ipv6: ipv6,
-            enableDds: enableDds,
-            enableAuthCodes: enableAuthCodes,
-            logger: logger)
-        : FlutterDebugAdapter(channel,
-            fileSystem: fileSystem,
-            platform: platform,
-            enableDds: enableDds,
-            enableAuthCodes: enableAuthCodes,
-            logger: logger);
+    void Function(Object? e)? onError,
+  }) : channel = ByteStreamServerChannel(input, output, logger) {
+    adapter =
+        test
+            ? FlutterTestDebugAdapter(
+              channel,
+              fileSystem: fileSystem,
+              platform: platform,
+              ipv6: ipv6,
+              enableFlutterDds: enableDds,
+              enableAuthCodes: enableAuthCodes,
+              logger: logger,
+              onError: onError,
+            )
+            : FlutterDebugAdapter(
+              channel,
+              fileSystem: fileSystem,
+              platform: platform,
+              enableFlutterDds: enableDds,
+              enableAuthCodes: enableAuthCodes,
+              logger: logger,
+              onError: onError,
+            );
   }
 
   final ByteStreamServerChannel channel;

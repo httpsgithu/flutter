@@ -7,9 +7,10 @@ import 'package:file/file.dart';
 import '../test_utils.dart';
 import 'deferred_components_config.dart';
 
-const String _kDefaultHtml  = '''
+const String _kDefaultHtml = '''
 <html>
     <head>
+        <meta charset='utf-8'>
         <title>Hello, World</title>
     </head>
     <body>
@@ -19,6 +20,11 @@ const String _kDefaultHtml  = '''
 ''';
 
 abstract class Project {
+  /// Creates a flutter Project for testing.
+  ///
+  /// If passed, `indexHtml` is used as the contents of the web/index.html file.
+  Project({this.indexHtml = _kDefaultHtml});
+
   late Directory dir;
 
   String get pubspec;
@@ -28,6 +34,13 @@ abstract class Project {
   DeferredComponentsConfig? get deferredComponents => null;
 
   Uri get mainDart => Uri.parse('package:test/main.dart');
+
+  /// The contents for the index.html file of this `Project`.
+  ///
+  /// Defaults to [_kDefaultHtml] via the Project constructor.
+  ///
+  /// (Used by [HotReloadProject].)
+  final String indexHtml;
 
   Future<void> setUpIn(Directory dir) async {
     this.dir = dir;
@@ -42,11 +55,18 @@ abstract class Project {
     }
     final String? generatedFile = this.generatedFile;
     if (generatedFile != null) {
-      writeFile(fileSystem.path.join(dir.path, '.dart_tool', 'flutter_gen', 'flutter_gen.dart'), generatedFile);
+      writeFile(
+        fileSystem.path.join(dir.path, '.dart_tool', 'flutter_gen', 'flutter_gen.dart'),
+        generatedFile,
+      );
     }
     deferredComponents?.setUpIn(dir);
-    writeFile(fileSystem.path.join(dir.path, 'web', 'index.html'), _kDefaultHtml);
-    writePackages(dir.path);
+
+    // Setup for different flutter web initializations
+    writeFile(fileSystem.path.join(dir.path, 'web', 'index.html'), indexHtml);
+    writeFile(fileSystem.path.join(dir.path, 'web', 'flutter.js'), '');
+    writeFile(fileSystem.path.join(dir.path, 'web', 'flutter_service_worker.js'), '');
+    writePackageConfig(dir.path);
     await getPackages(dir.path);
   }
 

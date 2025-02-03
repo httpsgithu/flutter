@@ -43,8 +43,12 @@ void main() {
     test(
       'AutofillClients send the correct configuration to the platform and responds to updateEditingStateWithTag method correctly',
       () async {
-        final FakeAutofillClient client1 = FakeAutofillClient(const TextEditingValue(text: 'test1'));
-        final FakeAutofillClient client2 = FakeAutofillClient(const TextEditingValue(text: 'test2'));
+        final FakeAutofillClient client1 = FakeAutofillClient(
+          const TextEditingValue(text: 'test1'),
+        );
+        final FakeAutofillClient client2 = FakeAutofillClient(
+          const TextEditingValue(text: 'test2'),
+        );
 
         client1.textInputConfiguration = TextInputConfiguration(
           autofillConfiguration: AutofillConfiguration(
@@ -80,10 +84,12 @@ void main() {
         ]);
 
         const TextEditingValue text2 = TextEditingValue(text: 'Text 2');
-        fakeTextChannel.incoming?.call(MethodCall(
-          'TextInputClient.updateEditingStateWithTag',
-          <dynamic>[0, <String, dynamic>{ client2.autofillId : text2.toJSON() }],
-        ));
+        fakeTextChannel.incoming?.call(
+          MethodCall('TextInputClient.updateEditingStateWithTag', <dynamic>[
+            0,
+            <String, dynamic>{client2.autofillId: text2.toJSON()},
+          ]),
+        );
 
         expect(client2.currentTextEditingValue, text2);
       },
@@ -125,6 +131,11 @@ class FakeAutofillClient implements TextInputClient, AutofillClient {
   }
 
   @override
+  void insertContent(KeyboardInsertedContent content) {
+    latestMethodCall = 'commitContent';
+  }
+
+  @override
   void updateFloatingCursor(RawFloatingCursorPoint point) {
     latestMethodCall = 'updateFloatingCursor';
   }
@@ -140,7 +151,32 @@ class FakeAutofillClient implements TextInputClient, AutofillClient {
   }
 
   @override
+  void didChangeInputControl(TextInputControl? oldControl, TextInputControl? newControl) {
+    latestMethodCall = 'didChangeInputControl';
+  }
+
+  @override
   void autofill(TextEditingValue newEditingValue) => updateEditingValue(newEditingValue);
+
+  @override
+  void showToolbar() {
+    latestMethodCall = 'showToolbar';
+  }
+
+  @override
+  void insertTextPlaceholder(Size size) {
+    latestMethodCall = 'insertTextPlaceholder';
+  }
+
+  @override
+  void removeTextPlaceholder() {
+    latestMethodCall = 'removeTextPlaceholder';
+  }
+
+  @override
+  void performSelector(String selectorName) {
+    latestMethodCall = 'performSelector';
+  }
 }
 
 class FakeAutofillScope with AutofillScopeMixin implements AutofillScope {

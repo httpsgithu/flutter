@@ -14,7 +14,7 @@ import '../framework/utils.dart';
 ///
 /// Using this [Task] allows DeviceLab capacity to only be spent on the [test].
 abstract class BuildTestTask {
-  BuildTestTask(this.args, {this.workingDirectory, this.runFlutterClean = true,}) {
+  BuildTestTask(this.args, {this.workingDirectory, this.runFlutterClean = true}) {
     final ArgResults argResults = argParser.parse(args);
     applicationBinaryPath = argResults[kApplicationBinaryPathOption] as String?;
     buildOnly = argResults[kBuildOnlyFlag] as bool;
@@ -25,10 +25,11 @@ abstract class BuildTestTask {
   static const String kBuildOnlyFlag = 'build';
   static const String kTestOnlyFlag = 'test';
 
-  final ArgParser argParser = ArgParser()
-    ..addOption(kApplicationBinaryPathOption)
-    ..addFlag(kBuildOnlyFlag)
-    ..addFlag(kTestOnlyFlag);
+  final ArgParser argParser =
+      ArgParser()
+        ..addOption(kApplicationBinaryPathOption)
+        ..addFlag(kBuildOnlyFlag)
+        ..addFlag(kTestOnlyFlag);
 
   /// Args passed from the test runner via "--task-arg".
   final List<String> args;
@@ -59,8 +60,8 @@ abstract class BuildTestTask {
       }
       section('BUILDING APPLICATION');
       await flutter('build', options: getBuildArgs(deviceOperatingSystem));
+      copyArtifacts();
     });
-
   }
 
   /// Run Flutter drive test from [getTestArgs] against the application under test on the device.
@@ -78,13 +79,21 @@ abstract class BuildTestTask {
   }
 
   /// Args passed to flutter build to build the application under test.
-  List<String> getBuildArgs(DeviceOperatingSystem deviceOperatingSystem) => throw UnimplementedError('getBuildArgs is not implemented');
+  List<String> getBuildArgs(DeviceOperatingSystem deviceOperatingSystem) =>
+      throw UnimplementedError('getBuildArgs is not implemented');
 
   /// Args passed to flutter drive to test the built application.
-  List<String> getTestArgs(DeviceOperatingSystem deviceOperatingSystem, String deviceId) => throw UnimplementedError('getTestArgs is not implemented');
+  List<String> getTestArgs(DeviceOperatingSystem deviceOperatingSystem, String deviceId) =>
+      throw UnimplementedError('getTestArgs is not implemented');
+
+  /// Copy artifacts to [applicationBinaryPath] if specified.
+  ///
+  /// This is needed when running from CI, so that LUCI recipes know where to locate and upload artifacts to GCS.
+  void copyArtifacts() => throw UnimplementedError('copyArtifacts is not implemented');
 
   /// Logic to construct [TaskResult] from this test's results.
-  Future<TaskResult> parseTaskResult() => throw UnimplementedError('parseTaskResult is not implemented');
+  Future<TaskResult> parseTaskResult() =>
+      throw UnimplementedError('parseTaskResult is not implemented');
 
   /// Path to the built application under test.
   ///
@@ -98,10 +107,6 @@ abstract class BuildTestTask {
   Future<TaskResult> call() async {
     if (buildOnly && testOnly) {
       throw Exception('Both build and test should not be passed. Pass only one.');
-    }
-
-    if (buildOnly && applicationBinaryPath != null) {
-      throw Exception('Application binary path is only used for tests');
     }
 
     if (!testOnly) {

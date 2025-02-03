@@ -2,40 +2,35 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for SliverAppBar
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [SliverAppBar].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const AppBarApp());
 
-  static const String _title = 'Flutter Code Sample';
+class AppBarApp extends StatelessWidget {
+  const AppBarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatefulWidget(),
-    );
+    return const MaterialApp(home: SliverAppBarExample());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class SliverAppBarExample extends StatefulWidget {
+  const SliverAppBarExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<SliverAppBarExample> createState() => _SliverAppBarExampleState();
 }
 
-class _MyStatefulWidgetState extends State<MyStatefulWidget> {
+class _SliverAppBarExampleState extends State<SliverAppBarExample> {
   bool _pinned = true;
   bool _snap = false;
   bool _floating = false;
 
-// [SliverAppBar]s are typically used in [CustomScrollView.slivers], which in
-// turn can be placed in a [Scaffold.body].
+  // [SliverAppBar]s are typically used in [CustomScrollView.slivers], which in
+  // turn can be placed in a [Scaffold.body].
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,24 +49,17 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
           const SliverToBoxAdapter(
             child: SizedBox(
               height: 20,
-              child: Center(
-                child: Text('Scroll to see the SliverAppBar in effect.'),
-              ),
+              child: Center(child: Text('Scroll to see the SliverAppBar in effect.')),
             ),
           ),
           SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (BuildContext context, int index) {
-                return Container(
-                  color: index.isOdd ? Colors.white : Colors.black12,
-                  height: 100.0,
-                  child: Center(
-                    child: Text('$index', textScaleFactor: 5),
-                  ),
-                );
-              },
-              childCount: 20,
-            ),
+            delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
+              return Container(
+                color: index.isOdd ? Colors.white : Colors.black12,
+                height: 100.0,
+                child: Center(child: Text('$index', textScaler: const TextScaler.linear(5))),
+              );
+            }, childCount: 20),
           ),
         ],
       ),

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for RestorableRouteFuture
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [RestorableRouteFuture].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const RestorableRouteFutureExampleApp());
+
+class RestorableRouteFutureExampleApp extends StatelessWidget {
+  const RestorableRouteFutureExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,12 +24,13 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHome extends StatefulWidget {
-  const MyHome({Key? key}) : super(key: key);
+  const MyHome({super.key});
 
   @override
   State<MyHome> createState() => _MyHomeState();
 }
 
+@pragma('vm:entry-point')
 class _MyHomeState extends State<MyHome> with RestorationMixin {
   final RestorableInt _lastCount = RestorableInt(0);
   late RestorableRouteFuture<int> _counterRoute;
@@ -41,20 +42,19 @@ class _MyHomeState extends State<MyHome> with RestorationMixin {
   void initState() {
     super.initState();
     _counterRoute = RestorableRouteFuture<int>(
-        onPresent: (NavigatorState navigator, Object? arguments) {
-      // Defines what route should be shown (and how it should be added
-      // to the navigator) when `RestorableRouteFuture.present` is called.
-      return navigator.restorablePush(
-        _counterRouteBuilder,
-        arguments: arguments,
-      );
-    }, onComplete: (int count) {
-      // Defines what should happen with the return value when the route
-      // completes.
-      setState(() {
-        _lastCount.value = count;
-      });
-    });
+      onPresent: (NavigatorState navigator, Object? arguments) {
+        // Defines what route should be shown (and how it should be added
+        // to the navigator) when `RestorableRouteFuture.present` is called.
+        return navigator.restorablePush(_counterRouteBuilder, arguments: arguments);
+      },
+      onComplete: (int count) {
+        // Defines what should happen with the return value when the route
+        // completes.
+        setState(() {
+          _lastCount.value = count;
+        });
+      },
+    );
   }
 
   @override
@@ -73,12 +73,10 @@ class _MyHomeState extends State<MyHome> with RestorationMixin {
 
   // A static `RestorableRouteBuilder` that can re-create the route during
   // state restoration.
-  static Route<int> _counterRouteBuilder(
-      BuildContext context, Object? arguments) {
+  @pragma('vm:entry-point')
+  static Route<int> _counterRouteBuilder(BuildContext context, Object? arguments) {
     return MaterialPageRoute<int>(
-      builder: (BuildContext context) => MyCounter(
-        title: arguments!.toString(),
-      ),
+      builder: (BuildContext context) => MyCounter(title: arguments!.toString()),
     );
   }
 
@@ -104,7 +102,7 @@ class _MyHomeState extends State<MyHome> with RestorationMixin {
 
 // Widget for the route pushed by the `RestorableRouteFuture`.
 class MyCounter extends StatefulWidget {
-  const MyCounter({Key? key, required this.title}) : super(key: key);
+  const MyCounter({super.key, required this.title});
 
   final String title;
 
@@ -141,9 +139,7 @@ class _MyCounterState extends State<MyCounter> with RestorationMixin {
           },
         ),
       ),
-      body: Center(
-        child: Text('Count: ${_count.value}'),
-      ),
+      body: Center(child: Text('Count: ${_count.value}')),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () {

@@ -5,12 +5,11 @@
 import 'project.dart';
 
 class BasicProject extends Project {
-
   @override
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
 
   dependencies:
     flutter:
@@ -25,7 +24,7 @@ class BasicProject extends Project {
 
   Future<void> main() async {
     while (true) {
-      runApp(new MyApp());
+      runApp(MyApp());
       await Future.delayed(const Duration(milliseconds: 50));
     }
   }
@@ -34,9 +33,9 @@ class BasicProject extends Project {
     @override
     Widget build(BuildContext context) {
       topLevelFunction();
-      return new MaterialApp( // BUILD BREAKPOINT
+      return MaterialApp( // BUILD BREAKPOINT
         title: 'Flutter Demo',
-        home: new Container(),
+        home: Container(),
       );
     }
   }
@@ -58,12 +57,11 @@ class BasicProject extends Project {
 /// A repro for the issue at https://github.com/Dart-Code/Dart-Code/issues/3448
 /// where Hot Restart could become stuck on exceptions and never complete.
 class BasicProjectThatThrows extends Project {
-
   @override
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
 
   dependencies:
     flutter:
@@ -120,7 +118,7 @@ class BasicProjectWithTimelineTraces extends Project {
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
 
   dependencies:
     flutter:
@@ -136,7 +134,7 @@ class BasicProjectWithTimelineTraces extends Project {
 
   Future<void> main() async {
     while (true) {
-      runApp(new MyApp());
+      runApp(MyApp());
       await Future.delayed(const Duration(milliseconds: 50));
       Timeline.instantSync('main');
     }
@@ -146,9 +144,9 @@ class BasicProjectWithTimelineTraces extends Project {
     @override
     Widget build(BuildContext context) {
       topLevelFunction();
-      return new MaterialApp( // BUILD BREAKPOINT
+      return MaterialApp( // BUILD BREAKPOINT
         title: 'Flutter Demo',
-        home: new Container(),
+        home: Container(),
       );
     }
   }
@@ -169,7 +167,7 @@ class BasicProjectWithFlutterGen extends Project {
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
 
   dependencies:
     flutter:
@@ -181,8 +179,6 @@ class BasicProjectWithFlutterGen extends Project {
 
   @override
   final String main = r'''
-  // @dart = 2.8
-  // generated package does not support null safety.
   import 'dart:async';
   import 'package:flutter_gen/flutter_gen.dart';
 
@@ -191,12 +187,11 @@ class BasicProjectWithFlutterGen extends Project {
 }
 
 class BasicProjectWithUnaryMain extends Project {
-
   @override
   final String pubspec = '''
   name: test
   environment:
-    sdk: ">=2.12.0-0 <3.0.0"
+    sdk: ^3.7.0-0
   dependencies:
     flutter:
       sdk: flutter
@@ -208,7 +203,7 @@ class BasicProjectWithUnaryMain extends Project {
   import 'package:flutter/material.dart';
   Future<void> main(List<String> args) async {
     while (true) {
-      runApp(new MyApp());
+      runApp(MyApp());
       await Future.delayed(const Duration(milliseconds: 50));
     }
   }
@@ -216,9 +211,9 @@ class BasicProjectWithUnaryMain extends Project {
     @override
     Widget build(BuildContext context) {
       topLevelFunction();
-      return new MaterialApp( // BUILD BREAKPOINT
+      return MaterialApp( // BUILD BREAKPOINT
         title: 'Flutter Demo',
-        home: new Container(),
+        home: Container(),
       );
     }
   }

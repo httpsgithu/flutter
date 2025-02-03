@@ -7,10 +7,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'mock_canvas.dart';
 import 'rendering_tester.dart';
 
 void main() {
+  TestRenderingFlutterBinding.ensureInitialized();
+
   test('Describe transform control test', () {
     final Matrix4 identity = Matrix4.identity();
     final List<String> description = debugDescribeTransform(identity);
@@ -24,10 +25,7 @@ void main() {
 
   test('transform property test', () {
     final Matrix4 transform = Matrix4.diagonal3(Vector3.all(2.0));
-    final TransformProperty simple = TransformProperty(
-      'transform',
-      transform,
-    );
+    final TransformProperty simple = TransformProperty('transform', transform);
     expect(simple.name, equals('transform'));
     expect(simple.value, same(transform));
     expect(
@@ -45,19 +43,12 @@ void main() {
       equals('transform: [2.0,0.0,0.0,0.0; 0.0,2.0,0.0,0.0; 0.0,0.0,2.0,0.0; 0.0,0.0,0.0,1.0]'),
     );
 
-    final TransformProperty nullProperty = TransformProperty(
-      'transform',
-      null,
-    );
+    final TransformProperty nullProperty = TransformProperty('transform', null);
     expect(nullProperty.name, equals('transform'));
     expect(nullProperty.value, isNull);
     expect(nullProperty.toString(), equals('transform: null'));
 
-    final TransformProperty hideNull = TransformProperty(
-      'transform',
-      null,
-      defaultValue: null,
-    );
+    final TransformProperty hideNull = TransformProperty('transform', null, defaultValue: null);
     expect(hideNull.value, isNull);
     expect(hideNull.toString(), equals('transform: null'));
   });
@@ -66,12 +57,29 @@ void main() {
     expect((Canvas canvas) {
       debugPaintPadding(canvas, const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0), null);
     }, paints..rect(color: const Color(0x90909090)));
-    expect((Canvas canvas) {
-      debugPaintPadding(canvas, const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0), const Rect.fromLTRB(11.0, 11.0, 19.0, 19.0));
-    }, paints..path(color: const Color(0x900090FF))..path(color: const Color(0xFF0090FF)));
-    expect((Canvas canvas) {
-      debugPaintPadding(canvas, const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0), const Rect.fromLTRB(15.0, 15.0, 15.0, 15.0));
-    }, paints..rect(rect: const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0), color: const Color(0x90909090)));
+    expect(
+      (Canvas canvas) {
+        debugPaintPadding(
+          canvas,
+          const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0),
+          const Rect.fromLTRB(11.0, 11.0, 19.0, 19.0),
+        );
+      },
+      paints
+        ..path(color: const Color(0x900090FF))
+        ..path(color: const Color(0xFF0090FF)),
+    );
+    expect(
+      (Canvas canvas) {
+        debugPaintPadding(
+          canvas,
+          const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0),
+          const Rect.fromLTRB(15.0, 15.0, 15.0, 15.0),
+        );
+      },
+      paints
+        ..rect(rect: const Rect.fromLTRB(10.0, 10.0, 20.0, 20.0), color: const Color(0x90909090)),
+    );
   });
 
   test('debugPaintPadding from render objects', () {
@@ -85,15 +93,18 @@ void main() {
         s = RenderSliverPadding(
           padding: const EdgeInsets.all(10.0),
           child: RenderSliverToBoxAdapter(
-            child: b = RenderPadding(
-              padding: const EdgeInsets.all(10.0),
-            ),
+            child: b = RenderPadding(padding: const EdgeInsets.all(10.0)),
           ),
         ),
       ],
     );
     layout(root);
-    expect(b.debugPaint, paints..rect(color: const Color(0xFF00FFFF))..rect(color: const Color(0x90909090)));
+    expect(
+      b.debugPaint,
+      paints
+        ..rect(color: const Color(0xFF00FFFF))
+        ..rect(color: const Color(0x90909090)),
+    );
     expect(b.debugPaint, isNot(paints..path()));
     expect(
       s.debugPaint,
@@ -117,11 +128,7 @@ void main() {
       child: RenderViewport(
         crossAxisDirection: AxisDirection.right,
         offset: ViewportOffset.zero(),
-        children: <RenderSliver>[
-          s = RenderSliverPadding(
-            padding: const EdgeInsets.all(10.0),
-          ),
-        ],
+        children: <RenderSliver>[s = RenderSliverPadding(padding: const EdgeInsets.all(10.0))],
       ),
     );
     layout(b);
@@ -138,7 +145,13 @@ void main() {
           ..path(color: const Color(0xFF0090FF)),
       ),
     );
-    expect(b.debugPaint, paints..rect(color: const Color(0xFF00FFFF))..path(color: const Color(0x900090FF))..path(color: const Color(0xFF0090FF)));
+    expect(
+      b.debugPaint,
+      paints
+        ..rect(color: const Color(0xFF00FFFF))
+        ..path(color: const Color(0x900090FF))
+        ..path(color: const Color(0xFF0090FF)),
+    );
     expect(b.debugPaint, isNot(paints..rect(color: const Color(0x90909090))));
     debugPaintSizeEnabled = false;
   });
@@ -154,21 +167,19 @@ void main() {
         s = RenderSliverPadding(
           padding: const EdgeInsets.all(10.0),
           child: RenderSliverToBoxAdapter(
-            child: RenderPadding(
-              padding: const EdgeInsets.all(10.0),
-            ),
+            child: RenderPadding(padding: const EdgeInsets.all(10.0)),
           ),
         ),
       ],
     );
     layout(root);
     dynamic error;
-    final PaintingContext context = PaintingContext(ContainerLayer(), const Rect.fromLTRB(0.0, 0.0, 800.0, 600.0));
+    final PaintingContext context = PaintingContext(
+      ContainerLayer(),
+      const Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
+    );
     try {
-      s.debugPaint(
-        context,
-        const Offset(0.0, 500),
-      );
+      s.debugPaint(context, const Offset(0.0, 500));
     } catch (e) {
       error = e;
     }
@@ -187,21 +198,19 @@ void main() {
         s = RenderSliverPadding(
           padding: const EdgeInsets.all(10.0),
           child: RenderSliverToBoxAdapter(
-            child: RenderPadding(
-              padding: const EdgeInsets.all(10.0),
-            ),
+            child: RenderPadding(padding: const EdgeInsets.all(10.0)),
           ),
         ),
       ],
     );
     layout(root);
     dynamic error;
-    final PaintingContext context = PaintingContext(ContainerLayer(), const Rect.fromLTRB(0.0, 0.0, 800.0, 600.0));
+    final PaintingContext context = PaintingContext(
+      ContainerLayer(),
+      const Rect.fromLTRB(0.0, 0.0, 800.0, 600.0),
+    );
     try {
-      s.debugPaint(
-        context,
-        const Offset(0.0, 500),
-      );
+      s.debugPaint(context, const Offset(0.0, 500));
     } catch (e) {
       error = e;
     }
@@ -220,16 +229,14 @@ void main() {
     );
     final RenderOpacity root = RenderOpacity(
       opacity: .5,
-      child: blackBox,
+      child: RenderRepaintBoundary(child: blackBox),
     );
     layout(root, phase: EnginePhase.compositingBits);
 
     final OffsetLayer rootLayer = OffsetLayer();
-    final PaintingContext context = PaintingContext(
-      rootLayer,
-      const Rect.fromLTWH(0, 0, 500, 500),
-    );
-    root.paint(context, const Offset(40, 40));
+    final PaintingContext context = PaintingContext(rootLayer, const Rect.fromLTWH(0, 0, 500, 500));
+    context.paintChild(root, const Offset(40, 40));
+
     final OpacityLayer opacityLayer = rootLayer.firstChild! as OpacityLayer;
     expect(opacityLayer.offset, const Offset(40, 40));
     debugDisableOpacityLayers = false;
@@ -257,5 +264,16 @@ void main() {
     debugDisableOpacityLayers = true;
     expect(() => debugAssertAllRenderVarsUnset('ERROR'), throwsFlutterError);
     debugDisableOpacityLayers = false;
+  });
+
+  test('debugCheckHasBoundedAxis warns for vertical and horizontal axis', () {
+    expect(
+      () => debugCheckHasBoundedAxis(Axis.vertical, const BoxConstraints()),
+      throwsFlutterError,
+    );
+    expect(
+      () => debugCheckHasBoundedAxis(Axis.horizontal, const BoxConstraints()),
+      throwsFlutterError,
+    );
   });
 }

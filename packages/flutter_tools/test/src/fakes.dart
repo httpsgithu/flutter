@@ -5,15 +5,23 @@
 import 'dart:async';
 import 'dart:io' as io show IOSink, ProcessSignal, Stdout, StdoutException;
 
+import 'package:dds/dds_launcher.dart';
+import 'package:flutter_tools/src/android/android_sdk.dart';
+import 'package:flutter_tools/src/android/android_studio.dart';
+import 'package:flutter_tools/src/android/java.dart';
 import 'package:flutter_tools/src/base/bot_detector.dart';
 import 'package:flutter_tools/src/base/file_system.dart';
 import 'package:flutter_tools/src/base/io.dart';
 import 'package:flutter_tools/src/base/logger.dart';
 import 'package:flutter_tools/src/base/os.dart';
+import 'package:flutter_tools/src/base/time.dart';
+import 'package:flutter_tools/src/base/version.dart';
 import 'package:flutter_tools/src/cache.dart';
 import 'package:flutter_tools/src/convert.dart';
 import 'package:flutter_tools/src/features.dart';
 import 'package:flutter_tools/src/ios/plist_parser.dart';
+import 'package:flutter_tools/src/project.dart';
+import 'package:flutter_tools/src/resident_runner.dart';
 import 'package:flutter_tools/src/version.dart';
 import 'package:test/fake.dart';
 
@@ -22,7 +30,7 @@ class FakeDyldEnvironmentArtifact extends ArtifactSet {
   FakeDyldEnvironmentArtifact() : super(DevelopmentArtifact.iOS);
   @override
   Map<String, String> get environment => <String, String>{
-    'DYLD_LIBRARY_PATH': '/path/to/libraries'
+    'DYLD_LIBRARY_PATH': '/path/to/libraries',
   };
 
   @override
@@ -32,8 +40,13 @@ class FakeDyldEnvironmentArtifact extends ArtifactSet {
   String get name => 'fake';
 
   @override
-  Future<void> update(ArtifactUpdater artifactUpdater, Logger logger, FileSystem fileSystem, OperatingSystemUtils operatingSystemUtils) async {
-  }
+  Future<void> update(
+    ArtifactUpdater artifactUpdater,
+    Logger logger,
+    FileSystem fileSystem,
+    OperatingSystemUtils operatingSystemUtils, {
+    bool offline = false,
+  }) async {}
 }
 
 /// A fake process implementation which can be provided all necessary values.
@@ -68,56 +81,9 @@ class FakeProcess implements Process {
   }
 }
 
-/// A process that prompts the user to proceed, then asynchronously writes
-/// some lines to stdout before it exits.
-class PromptingProcess implements Process {
-  PromptingProcess({
-    bool stdinError = false,
-  }) : _stdin = CompleterIOSink(throwOnAdd: stdinError);
-
-  Future<void> showPrompt(String prompt, List<String> outputLines) async {
-    try {
-      _stdoutController.add(utf8.encode(prompt));
-      final List<int> bytesOnStdin = await _stdin.future;
-      // Echo stdin to stdout.
-      _stdoutController.add(bytesOnStdin);
-      if (bytesOnStdin.isNotEmpty && bytesOnStdin[0] == utf8.encode('y')[0]) {
-        for (final String line in outputLines) {
-          _stdoutController.add(utf8.encode('$line\n'));
-        }
-      }
-    } finally {
-      await _stdoutController.close();
-    }
-  }
-
-  final StreamController<List<int>> _stdoutController = StreamController<List<int>>();
-  final CompleterIOSink _stdin;
-
-  @override
-  Stream<List<int>> get stdout => _stdoutController.stream;
-
-  @override
-  Stream<List<int>> get stderr => const Stream<List<int>>.empty();
-
-  @override
-  IOSink get stdin => _stdin;
-
-  @override
-  Future<int> get exitCode async {
-    await _stdoutController.done;
-    return 0;
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => null;
-}
-
 /// An IOSink that completes a future with the first line written to it.
 class CompleterIOSink extends MemoryIOSink {
-  CompleterIOSink({
-    this.throwOnAdd = false,
-  });
+  CompleterIOSink({this.throwOnAdd = false});
 
   final bool throwOnAdd;
 
@@ -159,8 +125,9 @@ class MemoryIOSink implements IOSink {
       (List<int> data) {
         try {
           add(data);
-        // Catches all exceptions to propagate them to the completer.
-        } catch (err, stack) { // ignore: avoid_catches_without_on_clauses
+          // Catches all exceptions to propagate them to the completer.
+        } catch (err, stack) {
+          // ignore: avoid_catches_without_on_clauses
           sub.cancel();
           completer.completeError(err, stack);
         }
@@ -183,12 +150,12 @@ class MemoryIOSink implements IOSink {
   }
 
   @override
-  void writeln([ Object? obj = '' ]) {
+  void writeln([Object? obj = '']) {
     add(encoding.encode('$obj\n'));
   }
 
   @override
-  void writeAll(Iterable<dynamic> objects, [ String separator = '' ]) {
+  void writeAll(Iterable<dynamic> objects, [String separator = '']) {
     bool addSeparator = false;
     for (final dynamic object in objects) {
       if (addSeparator) {
@@ -200,7 +167,7 @@ class MemoryIOSink implements IOSink {
   }
 
   @override
-  void addError(dynamic error, [ StackTrace? stackTrace ]) {
+  void addError(dynamic error, [StackTrace? stackTrace]) {
     throw UnimplementedError();
   }
 
@@ -208,10 +175,10 @@ class MemoryIOSink implements IOSink {
   Future<void> get done => close();
 
   @override
-  Future<void> close() async { }
+  Future<void> close() async {}
 
   @override
-  Future<void> flush() async { }
+  Future<void> flush() async {}
 
   void clear() {
     writes.clear();
@@ -228,10 +195,19 @@ class MemoryStdout extends MemoryIOSink implements io.Stdout {
   @override
   bool get hasTerminal => _hasTerminal;
   set hasTerminal(bool value) {
-    assert(value != null);
     _hasTerminal = value;
   }
+
   bool _hasTerminal = true;
+
+  @override
+  // ignore: override_on_non_overriding_member
+  String get lineTerminator => '\n';
+  @override
+  // ignore: override_on_non_overriding_member
+  set lineTerminator(String value) {
+    throw UnimplementedError('Setting the line terminator is not supported');
+  }
 
   @override
   io.IOSink get nonBlocking => this;
@@ -239,9 +215,9 @@ class MemoryStdout extends MemoryIOSink implements io.Stdout {
   @override
   bool get supportsAnsiEscapes => _supportsAnsiEscapes;
   set supportsAnsiEscapes(bool value) {
-    assert(value != null);
     _supportsAnsiEscapes = value;
   }
+
   bool _supportsAnsiEscapes = true;
 
   @override
@@ -251,6 +227,7 @@ class MemoryStdout extends MemoryIOSink implements io.Stdout {
     }
     throw const io.StdoutException('unspecified mock value');
   }
+
   set terminalColumns(int value) => _terminalColumns = value;
   int? _terminalColumns;
 
@@ -261,15 +238,16 @@ class MemoryStdout extends MemoryIOSink implements io.Stdout {
     }
     throw const io.StdoutException('unspecified mock value');
   }
+
   set terminalLines(int value) => _terminalLines = value;
   int? _terminalLines;
 }
 
 /// A Stdio that collects stdout and supports simulated stdin.
 class FakeStdio extends Stdio {
-  final MemoryStdout _stdout = MemoryStdout();
+  final MemoryStdout _stdout = MemoryStdout()..terminalColumns = 80;
   final MemoryIOSink _stderr = MemoryIOSink();
-  final StreamController<List<int>> _stdin = StreamController<List<int>>();
+  final FakeStdin _stdin = FakeStdin();
 
   @override
   MemoryStdout get stdout => _stdout;
@@ -278,37 +256,105 @@ class FakeStdio extends Stdio {
   MemoryIOSink get stderr => _stderr;
 
   @override
-  Stream<List<int>> get stdin => _stdin.stream;
+  Stream<List<int>> get stdin => _stdin;
 
   void simulateStdin(String line) {
-    _stdin.add(utf8.encode('$line\n'));
+    _stdin.controller.add(utf8.encode('$line\n'));
   }
+
+  @override
+  bool hasTerminal = false;
 
   List<String> get writtenToStdout => _stdout.writes.map<String>(_stdout.encoding.decode).toList();
   List<String> get writtenToStderr => _stderr.writes.map<String>(_stderr.encoding.decode).toList();
 }
 
-class FakePlistParser implements PlistParser {
-  final Map<String, dynamic> _underlyingValues = <String, String>{};
+class FakeStdin extends Fake implements Stdin {
+  final StreamController<List<int>> controller = StreamController<List<int>>();
 
-  void setProperty(String key, dynamic value) {
+  void Function(bool mode)? echoModeCallback;
+
+  bool _echoMode = true;
+
+  @override
+  bool get echoMode => _echoMode;
+
+  @override
+  set echoMode(bool mode) {
+    _echoMode = mode;
+    if (echoModeCallback != null) {
+      echoModeCallback!(mode);
+    }
+  }
+
+  @override
+  bool lineMode = true;
+
+  @override
+  bool hasTerminal = false;
+
+  @override
+  Stream<S> transform<S>(StreamTransformer<List<int>, S> transformer) {
+    return controller.stream.transform(transformer);
+  }
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int> event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    return controller.stream.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+  }
+}
+
+class FakePlistParser implements PlistParser {
+  FakePlistParser([Map<String, Object>? underlyingValues])
+    : _underlyingValues = underlyingValues ?? <String, Object>{};
+
+  final Map<String, Object> _underlyingValues;
+
+  void setProperty(String key, Object value) {
     _underlyingValues[key] = value;
   }
 
   @override
-  Map<String, dynamic> parseFile(String plistFilePath) {
+  String? plistXmlContent(String plistFilePath) => throw UnimplementedError();
+
+  @override
+  String? plistJsonContent(String filePath, {bool sorted = false}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Map<String, Object> parseFile(String plistFilePath) {
     return _underlyingValues;
   }
 
   @override
-  String getValueFromFile(String plistFilePath, String key) {
-    return _underlyingValues[key] as String;
+  T? getValueFromFile<T>(String plistFilePath, String key) {
+    return _underlyingValues[key] as T?;
+  }
+
+  @override
+  bool replaceKey(String plistFilePath, {required String key, String? value}) {
+    if (value == null) {
+      _underlyingValues.remove(key);
+      return true;
+    }
+    setProperty(key, value);
+    return true;
   }
 }
 
 class FakeBotDetector implements BotDetector {
-  const FakeBotDetector(bool isRunningOnBot)
-      : _isRunningOnBot = isRunningOnBot;
+  const FakeBotDetector(bool isRunningOnBot) : _isRunningOnBot = isRunningOnBot;
 
   @override
   Future<bool> get isRunningOnBot async => _isRunningOnBot;
@@ -318,7 +364,7 @@ class FakeBotDetector implements BotDetector {
 
 class FakeFlutterVersion implements FlutterVersion {
   FakeFlutterVersion({
-    this.channel = 'unknown',
+    this.branch = 'master',
     this.dartSdkVersion = '12',
     this.devToolsVersion = '2.8.0',
     this.engineRevision = 'abcdefghijklmnopqrstuvwxyz',
@@ -330,16 +376,37 @@ class FakeFlutterVersion implements FlutterVersion {
     this.frameworkAge = '0 hours ago',
     this.frameworkCommitDate = '12/01/01',
     this.gitTagVersion = const GitTagVersion.unknown(),
+    this.flutterRoot = '/path/to/flutter',
+    this.nextFlutterVersion,
   });
+
+  final String branch;
 
   bool get didFetchTagsAndUpdate => _didFetchTagsAndUpdate;
   bool _didFetchTagsAndUpdate = false;
+
+  /// Will be returned by [fetchTagsAndGetVersion] if not null.
+  final FlutterVersion? nextFlutterVersion;
+
+  @override
+  FlutterVersion fetchTagsAndGetVersion({SystemClock clock = const SystemClock()}) {
+    _didFetchTagsAndUpdate = true;
+    return nextFlutterVersion ?? this;
+  }
 
   bool get didCheckFlutterVersionFreshness => _didCheckFlutterVersionFreshness;
   bool _didCheckFlutterVersionFreshness = false;
 
   @override
-  final String channel;
+  String get channel {
+    if (kOfficialChannels.contains(branch) || kObsoleteBranches.containsKey(branch)) {
+      return branch;
+    }
+    return kUserBranch;
+  }
+
+  @override
+  final String flutterRoot;
 
   @override
   final String devToolsVersion;
@@ -354,7 +421,7 @@ class FakeFlutterVersion implements FlutterVersion {
   final String engineRevisionShort;
 
   @override
-  final String repositoryUrl;
+  final String? repositoryUrl;
 
   @override
   final String frameworkVersion;
@@ -372,15 +439,10 @@ class FakeFlutterVersion implements FlutterVersion {
   final String frameworkCommitDate;
 
   @override
-  String get frameworkDate => frameworkCommitDate;
-
-  @override
   final GitTagVersion gitTagVersion;
 
   @override
-  void fetchTagsAndUpdate() {
-    _didFetchTagsAndUpdate = true;
-  }
+  FileSystem get fs => throw UnimplementedError('FakeFlutterVersion.fs is not implemented');
 
   @override
   Future<void> checkFlutterVersionFreshness() async {
@@ -388,16 +450,21 @@ class FakeFlutterVersion implements FlutterVersion {
   }
 
   @override
-  Future<void> ensureVersionFile() async { }
+  Future<void> ensureVersionFile() async {}
 
   @override
   String getBranchName({bool redactUnknownBranches = false}) {
-    return 'master';
+    if (!redactUnknownBranches ||
+        kOfficialChannels.contains(branch) ||
+        kObsoleteBranches.containsKey(branch)) {
+      return branch;
+    }
+    return kUserBranch;
   }
 
   @override
   String getVersionString({bool redactUnknownBranches = false}) {
-    return 'v0.0.0';
+    return '${getBranchName(redactUnknownBranches: redactUnknownBranches)}/$frameworkRevision';
   }
 
   @override
@@ -414,12 +481,15 @@ class TestFeatureFlags implements FeatureFlags {
     this.isMacOSEnabled = false,
     this.isWebEnabled = false,
     this.isWindowsEnabled = false,
-    this.isSingleWidgetReloadEnabled = false,
     this.isAndroidEnabled = true,
     this.isIOSEnabled = true,
     this.isFuchsiaEnabled = false,
     this.areCustomDevicesEnabled = false,
-    this.isWindowsUwpEnabled = false,
+    this.isCliAnimationEnabled = true,
+    this.isNativeAssetsEnabled = false,
+    this.isPreviewDeviceEnabled = false,
+    this.isSwiftPackageManagerEnabled = false,
+    this.isExplicitPackageDependenciesEnabled = false,
   });
 
   @override
@@ -435,9 +505,6 @@ class TestFeatureFlags implements FeatureFlags {
   final bool isWindowsEnabled;
 
   @override
-  final bool isSingleWidgetReloadEnabled;
-
-  @override
   final bool isAndroidEnabled;
 
   @override
@@ -450,47 +517,37 @@ class TestFeatureFlags implements FeatureFlags {
   final bool areCustomDevicesEnabled;
 
   @override
-  final bool isWindowsUwpEnabled;
+  final bool isCliAnimationEnabled;
+
+  @override
+  final bool isNativeAssetsEnabled;
+
+  @override
+  final bool isPreviewDeviceEnabled;
+
+  @override
+  final bool isSwiftPackageManagerEnabled;
+
+  @override
+  final bool isExplicitPackageDependenciesEnabled;
 
   @override
   bool isEnabled(Feature feature) {
-    switch (feature) {
-      case flutterWebFeature:
-        return isWebEnabled;
-      case flutterLinuxDesktopFeature:
-        return isLinuxEnabled;
-      case flutterMacOSDesktopFeature:
-        return isMacOSEnabled;
-      case flutterWindowsDesktopFeature:
-        return isWindowsEnabled;
-      case singleWidgetReload:
-        return isSingleWidgetReloadEnabled;
-      case flutterAndroidFeature:
-        return isAndroidEnabled;
-      case flutterIOSFeature:
-        return isIOSEnabled;
-      case flutterFuchsiaFeature:
-        return isFuchsiaEnabled;
-      case flutterCustomDevicesFeature:
-        return areCustomDevicesEnabled;
-      case windowsUwpEmbedding:
-        return isWindowsUwpEnabled;
-    }
-    return false;
+    return switch (feature) {
+      flutterWebFeature => isWebEnabled,
+      flutterLinuxDesktopFeature => isLinuxEnabled,
+      flutterMacOSDesktopFeature => isMacOSEnabled,
+      flutterWindowsDesktopFeature => isWindowsEnabled,
+      flutterAndroidFeature => isAndroidEnabled,
+      flutterIOSFeature => isIOSEnabled,
+      flutterFuchsiaFeature => isFuchsiaEnabled,
+      flutterCustomDevicesFeature => areCustomDevicesEnabled,
+      cliAnimation => isCliAnimationEnabled,
+      nativeAssets => isNativeAssetsEnabled,
+      explicitPackageDependencies => isExplicitPackageDependenciesEnabled,
+      _ => false,
+    };
   }
-}
-
-class FakeStatusLogger extends DelegatingLogger {
-  FakeStatusLogger(Logger delegate) : super(delegate);
-
-  late Status status;
-
-  @override
-  Status startProgress(String message, {
-    String? progressId,
-    bool multilineOutput = false,
-    int progressIndicatorPadding = kDefaultStatusPadding,
-  }) => status;
 }
 
 class FakeOperatingSystemUtils extends Fake implements OperatingSystemUtils {
@@ -499,7 +556,7 @@ class FakeOperatingSystemUtils extends Fake implements OperatingSystemUtils {
   final List<List<String>> chmods = <List<String>>[];
 
   @override
-  void makeExecutable(File file) { }
+  void makeExecutable(File file) {}
 
   @override
   HostPlatform hostPlatform = HostPlatform.linux_x64;
@@ -516,10 +573,13 @@ class FakeOperatingSystemUtils extends Fake implements OperatingSystemUtils {
   List<File> whichAll(String execName) => <File>[];
 
   @override
-  void unzip(File file, Directory targetDirectory) { }
+  int? getDirectorySize(Directory directory) => 10000000; // 10 MB / 9.5 MiB
 
   @override
-  void unpack(File gzippedTarFile, Directory targetDirectory) { }
+  void unzip(File file, Directory targetDirectory) {}
+
+  @override
+  void unpack(File gzippedTarFile, Directory targetDirectory) {}
 
   @override
   Stream<List<int>> gzipLevel1Stream(Stream<List<int>> stream) => stream;
@@ -571,18 +631,163 @@ class FakeStopwatch implements Stopwatch {
 }
 
 class FakeStopwatchFactory implements StopwatchFactory {
-  FakeStopwatchFactory({
-    Stopwatch? stopwatch,
-    Map<String, Stopwatch>? stopwatches
-  }) : stopwatches = <String, Stopwatch>{
-         if (stopwatches != null) ...stopwatches,
-         if (stopwatch != null) '': stopwatch,
-       };
+  FakeStopwatchFactory({Stopwatch? stopwatch, Map<String, Stopwatch>? stopwatches})
+    : stopwatches = <String, Stopwatch>{
+        if (stopwatches != null) ...stopwatches,
+        if (stopwatch != null) '': stopwatch,
+      };
 
   Map<String, Stopwatch> stopwatches;
 
   @override
   Stopwatch createStopwatch([String name = '']) {
     return stopwatches[name] ?? FakeStopwatch();
+  }
+}
+
+class FakeFlutterProjectFactory implements FlutterProjectFactory {
+  @override
+  FlutterProject fromDirectory(Directory directory) {
+    return FlutterProject.fromDirectoryTest(directory);
+  }
+
+  @override
+  Map<String, FlutterProject> get projects => throw UnimplementedError();
+}
+
+class FakeAndroidSdk extends Fake implements AndroidSdk {
+  @override
+  late bool platformToolsAvailable;
+
+  @override
+  late bool licensesAvailable;
+
+  @override
+  AndroidSdkVersion? latestVersion;
+}
+
+class FakeAndroidStudio extends Fake implements AndroidStudio {
+  @override
+  String get javaPath => 'java';
+}
+
+class FakeJava extends Fake implements Java {
+  FakeJava({
+    this.javaHome = '/android-studio/jbr',
+    this.javaSource = JavaSource.androidStudio,
+    String binary = '/android-studio/jbr/bin/java',
+    Version? version,
+    bool canRun = true,
+  }) : binaryPath = binary,
+       version = version ?? const Version.withText(19, 0, 2, 'openjdk 19.0.2 2023-01-17'),
+       _environment = <String, String>{
+         if (javaHome != null) Java.javaHomeEnvironmentVariable: javaHome,
+         'PATH': '/android-studio/jbr/bin',
+       },
+       _canRun = canRun;
+
+  @override
+  String? javaHome;
+
+  @override
+  String binaryPath;
+
+  @override
+  JavaSource javaSource;
+
+  final Map<String, String> _environment;
+  final bool _canRun;
+
+  @override
+  Map<String, String> get environment => _environment;
+
+  @override
+  Version? version;
+
+  @override
+  bool canRun() {
+    return _canRun;
+  }
+}
+
+class FakeDartDevelopmentServiceLauncher extends Fake implements DartDevelopmentServiceLauncher {
+  FakeDartDevelopmentServiceLauncher({required this.uri, this.devToolsUri, this.dtdUri});
+
+  @override
+  final Uri uri;
+
+  @override
+  final Uri? devToolsUri;
+
+  @override
+  final Uri? dtdUri;
+
+  @override
+  Future<void> get done => _completer.future;
+
+  @override
+  Future<void> shutdown() async => _completer.complete();
+
+  final Completer<void> _completer = Completer<void>();
+}
+
+class FakeDevtoolsLauncher extends Fake implements DevtoolsLauncher {
+  FakeDevtoolsLauncher({DevToolsServerAddress? serverAddress}) : _serverAddress = serverAddress;
+
+  @override
+  Future<void> get processStart => _processStarted.future;
+
+  final Completer<void> _processStarted = Completer<void>();
+
+  @override
+  Future<void> get ready => readyCompleter.future;
+
+  Completer<void> readyCompleter = Completer<void>()..complete();
+
+  @override
+  DevToolsServerAddress? activeDevToolsServer;
+
+  @override
+  Uri? devToolsUrl;
+
+  @override
+  Uri? dtdUri;
+
+  @override
+  bool printDtdUri = false;
+
+  final DevToolsServerAddress? _serverAddress;
+
+  @override
+  Future<DevToolsServerAddress?> serve() async => _serverAddress;
+
+  @override
+  Future<void> launch(Uri vmServiceUri, {List<String>? additionalArguments}) {
+    _processStarted.complete();
+    return Completer<void>().future;
+  }
+
+  bool closed = false;
+
+  @override
+  Future<void> close() async {
+    closed = true;
+  }
+}
+
+/// A fake [Logger] that throws the [Invocation] for any method call.
+class FakeLogger implements Logger {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw invocation; // ignore: only_throw_errors
+}
+
+class ClosedStdinController extends Fake implements StreamSink<List<int>> {
+  @override
+  Future<Object?> addStream(Stream<List<int>> stream) async =>
+      throw const SocketException('Bad pipe');
+
+  @override
+  Future<Object?> close() async {
+    return null;
   }
 }

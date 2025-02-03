@@ -5,7 +5,7 @@
 import 'package:flutter/material.dart';
 
 class CullOpacityPage extends StatefulWidget {
-  const CullOpacityPage({Key? key}) : super(key: key);
+  const CullOpacityPage({super.key});
 
   @override
   State<StatefulWidget> createState() => _CullOpacityPageState();
@@ -38,19 +38,25 @@ class _CullOpacityPageState extends State<CullOpacityPage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: List<Widget>.generate(50, (int i) => Positioned(
-      left: 0,
-      top: (200 * i).toDouble() + _offsetY.value,
-      child: Opacity(
-        opacity: 0.5,
-        child: RepaintBoundary(
-          child: Container(
-            // Slightly change width to invalidate raster cache.
-            width: 1000 - (_offsetY.value / 100),
-            height: 100, color: Colors.red,
+    return Stack(
+      children: List<Widget>.generate(
+        50,
+        (int i) => Positioned(
+          left: 0,
+          top: (200 * i).toDouble() + _offsetY.value,
+          child: Opacity(
+            opacity: 0.5,
+            child: RepaintBoundary(
+              child: Container(
+                // Slightly change width to invalidate raster cache.
+                width: 1000 - (_offsetY.value / 100),
+                height: 100,
+                color: Colors.red,
+              ),
+            ),
           ),
         ),
       ),
-    )));
+    );
   }
 }

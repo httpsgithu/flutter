@@ -8,7 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 // This file is for testings that require a `LiveTestWidgetsFlutterBinding`
 void main() {
-  LiveTestWidgetsFlutterBinding();
+  final LiveTestWidgetsFlutterBinding binding = LiveTestWidgetsFlutterBinding();
   testWidgets('Input PointerAddedEvent', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: Text('Test')));
     await tester.pump();
@@ -21,12 +21,16 @@ void main() {
 
   testWidgets('Input PointerHoverEvent', (WidgetTester tester) async {
     PointerHoverEvent? hoverEvent;
-    await tester.pumpWidget(MaterialApp(home: MouseRegion(
-      child: const Text('Test'),
-      onHover: (PointerHoverEvent event) {
-        hoverEvent = event;
-      },
-    )));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MouseRegion(
+          child: const Text('Test'),
+          onHover: (PointerHoverEvent event) {
+            hoverEvent = event;
+          },
+        ),
+      ),
+    );
     await tester.pump();
     final TestGesture gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     final Offset location = tester.getCenter(find.text('Test'));
@@ -34,7 +38,6 @@ void main() {
     await gesture.moveTo(location);
     expect(hoverEvent, isNotNull);
     expect(hoverEvent!.position, location);
-    await gesture.removePointer();
   });
 
   testWidgets('hitTesting works when using setSurfaceSize', (WidgetTester tester) async {
@@ -72,9 +75,7 @@ void main() {
   testWidgets('setSurfaceSize works', (WidgetTester tester) async {
     await tester.pumpWidget(const MaterialApp(home: Center(child: Text('Test'))));
 
-    final Size windowCenter = tester.binding.window.physicalSize /
-        tester.binding.window.devicePixelRatio /
-        2;
+    final Size windowCenter = tester.view.physicalSize / tester.view.devicePixelRatio / 2;
     final double windowCenterX = windowCenter.width;
     final double windowCenterY = windowCenter.height;
 
@@ -100,4 +101,53 @@ void main() {
 
     await expectLater(tester.binding.reassembleApplication(), completes);
   }, timeout: const Timeout(Duration(seconds: 30)));
+
+  testWidgets(
+    'shouldPropagateDevicePointerEvents can override events from ${TestBindingEventSource.device}',
+    (WidgetTester tester) async {
+      binding.shouldPropagateDevicePointerEvents = true;
+
+      await tester.pumpWidget(_ShowNumTaps());
+
+      final Offset position = tester.getCenter(find.text('0'));
+
+      // Simulates a real device tap.
+      //
+      // `handlePointerEventForSource defaults to sending events using
+      // TestBindingEventSource.device. This will not be forwarded to the actual
+      // gesture handlers, unless `shouldPropagateDevicePointerEvents` is true.
+      binding.handlePointerEventForSource(PointerDownEvent(position: position));
+      binding.handlePointerEventForSource(PointerUpEvent(position: position));
+
+      await tester.pump();
+
+      expect(find.text('1'), findsOneWidget);
+
+      // Reset the value, otherwise the test will fail when it checks that this
+      // has not been changed as an invariant.
+      binding.shouldPropagateDevicePointerEvents = false;
+    },
+  );
+}
+
+/// A widget that shows the number of times it has been tapped.
+class _ShowNumTaps extends StatefulWidget {
+  @override
+  _ShowNumTapsState createState() => _ShowNumTapsState();
+}
+
+class _ShowNumTapsState extends State<_ShowNumTaps> {
+  int _counter = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _counter++;
+        });
+      },
+      child: Directionality(textDirection: TextDirection.ltr, child: Text(_counter.toString())),
+    );
+  }
 }

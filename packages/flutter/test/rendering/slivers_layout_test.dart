@@ -10,7 +10,7 @@ import 'rendering_tester.dart';
 int layouts = 0;
 
 class RenderLayoutWatcher extends RenderProxyBox {
-  RenderLayoutWatcher(RenderBox child) : super(child);
+  RenderLayoutWatcher(RenderBox super.child);
   @override
   void performLayout() {
     layouts += 1;
@@ -19,6 +19,8 @@ class RenderLayoutWatcher extends RenderProxyBox {
 }
 
 void main() {
+  TestRenderingFlutterBinding.ensureInitialized();
+
   test('RenderViewport basic test - impact of layout', () {
     RenderSliverToBoxAdapter sliver;
     RenderViewport viewport;
@@ -67,5 +69,4 @@ void main() {
     expect(layouts, 1);
     expect(box.localToGlobal(box.size.center(Offset.zero)), const Offset(400.0, 600.0 - 190.0));
   });
-
 }

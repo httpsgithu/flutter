@@ -2,48 +2,42 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Flutter code sample for CircularProgressIndicator
-
 import 'package:flutter/material.dart';
 
-void main() => runApp(const MyApp());
+/// Flutter code sample for [CircularProgressIndicator].
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+void main() => runApp(const ProgressIndicatorExampleApp());
 
-  static const String _title = 'Flutter Code Sample';
+class ProgressIndicatorExampleApp extends StatelessWidget {
+  const ProgressIndicatorExampleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: _title,
-      home: MyStatefulWidget(),
-    );
+    return const MaterialApp(home: ProgressIndicatorExample());
   }
 }
 
-class MyStatefulWidget extends StatefulWidget {
-  const MyStatefulWidget({Key? key}) : super(key: key);
+class ProgressIndicatorExample extends StatefulWidget {
+  const ProgressIndicatorExample({super.key});
 
   @override
-  State<MyStatefulWidget> createState() => _MyStatefulWidgetState();
+  State<ProgressIndicatorExample> createState() => _ProgressIndicatorExampleState();
 }
 
-/// AnimationControllers can be created with `vsync: this` because of TickerProviderStateMixin.
-class _MyStatefulWidgetState extends State<MyStatefulWidget>
+class _ProgressIndicatorExampleState extends State<ProgressIndicatorExample>
     with TickerProviderStateMixin {
   late AnimationController controller;
+  bool year2023 = true;
 
   @override
   void initState() {
-    controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 5),
-    )..addListener(() {
-        setState(() {});
-      });
-    controller.repeat(reverse: true);
     super.initState();
+    controller =
+        AnimationController(vsync: this, duration: const Duration(seconds: 5))
+          ..addListener(() {
+            setState(() {});
+          })
+          ..repeat(reverse: true);
   }
 
   @override
@@ -55,18 +49,32 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          spacing: 16.0,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'Linear progress indicator with a fixed color',
-              style: Theme.of(context).textTheme.headline6,
+            const Text('Determinate CircularProgressIndicator'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CircularProgressIndicator(year2023: year2023, value: controller.value),
             ),
-            CircularProgressIndicator(
-              value: controller.value,
-              semanticsLabel: 'Linear progress indicator',
+            const Text('Indeterminate CircularProgressIndicator'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: CircularProgressIndicator(year2023: year2023),
+            ),
+            SwitchListTile(
+              value: year2023,
+              title:
+                  year2023
+                      ? const Text('Switch to latest M3 style')
+                      : const Text('Switch to year2023 M3 style'),
+              onChanged: (bool value) {
+                setState(() {
+                  year2023 = !year2023;
+                });
+              },
             ),
           ],
         ),
